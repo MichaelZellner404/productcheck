@@ -49,7 +49,7 @@
         /* SETTINGS OVERLAY */
         .settings-overlay{display:none;position:fixed;inset:0;background:var(--overlay);z-index:3000;align-items:flex-start;justify-content:flex-end;padding:20px;}
         .settings-overlay.active{display:flex;}
-        .settings-panel{background:var(--card);border:1px solid var(--border2);width:380px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow);margin-top:60px;}
+        .settings-panel{background:var(--card);border:1px solid var(--border2);width:420px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow);margin-top:60px;}
         .settings-header{padding:22px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
         .settings-header h2{font-family:'Bebas Neue',sans-serif;font-size:1.5em;letter-spacing:3px;}
         .settings-section{padding:20px 24px;border-bottom:1px solid var(--border);}
@@ -70,6 +70,11 @@
         .admin-loggedin.active{display:flex;}
         .admin-status-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.5s ease-in-out infinite;}
         @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+        .user-level{display:inline-block;background:var(--green);color:var(--bg);padding:2px 8px;font-size:.7em;font-family:'Space Mono',monospace;margin-left:8px;}
+        .user-badges{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+        .badge{padding:3px 8px;font-size:.7em;border:1px solid var(--border2);font-family:'Space Mono',monospace;}
+        .sync-status{font-size:.75em;color:var(--muted2);font-family:'Space Mono',monospace;margin-top:10px;display:flex;align-items:center;gap:6px;}
+        .sync-indicator{width:6px;height:6px;border-radius:50%;background:var(--green);}
 
         /* MAIN */
         .container{max-width:1400px;margin:0 auto;padding:28px 24px;}
@@ -106,8 +111,9 @@
         .form-group{margin-bottom:20px;}
         .form-group.full-width{grid-column:1/-1;}
         label{display:block;font-family:'Space Mono',monospace;font-size:.75em;letter-spacing:1.5px;color:var(--muted);margin-bottom:7px;text-transform:uppercase;}
-        input[type="text"],input[type="number"],input[type="password"],textarea{width:100%;padding:11px 14px;border:1px solid var(--border2);background:var(--input-bg);color:var(--text);font-size:.92em;font-family:'Inter',sans-serif;transition:border-color .2s;}
-        input:focus,textarea:focus{outline:none;border-color:var(--green);}
+        input[type="text"],input[type="number"],input[type="password"],textarea,select{width:100%;padding:11px 14px;border:1px solid var(--border2);background:var(--input-bg);color:var(--text);font-size:.92em;font-family:'Inter',sans-serif;transition:border-color .2s;}
+        select{cursor:pointer;}
+        input:focus,textarea:focus,select:focus{outline:none;border-color:var(--green);}
         input.auto-filled{border-color:rgba(0,200,100,.4);}
         textarea{resize:vertical;min-height:96px;}
         .rating-input{display:flex;align-items:center;gap:14px;}
@@ -116,6 +122,9 @@
         .rating-value{font-family:'Space Mono',monospace;font-size:1.5em;font-weight:700;min-width:64px;text-align:right;}
         .button-group{display:flex;gap:10px;margin-top:24px;}
         .button-group .btn{flex:1;}
+        .store-list{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;}
+        .store-chip{background:var(--bg2);border:1px solid var(--border);padding:6px 12px;font-size:.8em;font-family:'Space Mono',monospace;display:flex;align-items:center;gap:6px;}
+        .store-chip.auto-filled{border-color:rgba(0,200,100,.4);}
 
         /* LOGIN REQUIRED */
         .login-required-banner{background:var(--bg2);border:1px solid var(--border2);padding:16px 20px;text-align:center;margin-top:16px;font-size:.9em;color:var(--muted);}
@@ -220,8 +229,8 @@
                 <div class="user-avatar" id="headerAvatar"></div>
                 <span id="headerUsername"></span>
             </div>
-            <button class="btn" onclick="showUploadSection()">+ PRODUKT</button>
-            <button class="btn" onclick="openSettings()" style="padding:9px 14px;font-size:1.1em;" title="Einstellungen">⚙</button>
+            <button class="btn" onclick="showUploadSection()">+ <span data-lang-key="add_product">PRODUKT</span></button>
+            <button class="btn" onclick="openSettings()" title="Einstellungen">⚙ <span data-lang-key="settings">EINSTELLUNGEN</span></button>
         </div>
     </div>
 </header>
@@ -230,62 +239,97 @@
 <div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsIfOutside(event)">
     <div class="settings-panel">
         <div class="settings-header">
-            <h2>EINSTELLUNGEN</h2>
+            <h2 data-lang-key="settings_title">EINSTELLUNGEN</h2>
             <button class="close-btn" onclick="closeSettings()">×</button>
         </div>
         <div>
             <!-- DARSTELLUNG -->
             <div class="settings-section">
-                <div class="settings-section-title">DARSTELLUNG</div>
+                <div class="settings-section-title" data-lang-key="appearance">DARSTELLUNG</div>
                 <div class="toggle-row">
-                    <span class="toggle-label">Hell-Modus</span>
+                    <span class="toggle-label" data-lang-key="light_mode">Hell-Modus</span>
                     <div class="toggle" id="themeToggle" onclick="toggleTheme()"></div>
+                </div>
+                <div class="toggle-row">
+                    <span class="toggle-label" data-lang-key="language">Sprache</span>
+                    <select id="languageSelect" onchange="changeLanguage(this.value)" style="padding:6px 10px;font-size:.85em;">
+                        <option value="de">Deutsch</option>
+                        <option value="en">English</option>
+                    </select>
+                </div>
+            </div>
+            <!-- GITHUB SYNC -->
+            <div class="settings-section">
+                <div class="settings-section-title" data-lang-key="github_sync">GITHUB SYNCHRONISATION</div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label data-lang-key="github_token">GITHUB TOKEN</label>
+                    <input type="password" id="githubToken" placeholder="ghp_xxxxx...">
+                </div>
+                <div class="form-group" style="margin-bottom:12px;">
+                    <label data-lang-key="github_repo">REPOSITORY (user/repo)</label>
+                    <input type="text" id="githubRepo" placeholder="username/produktforum-data">
+                </div>
+                <div style="display:flex;gap:8px;">
+                    <button class="btn btn-green" style="flex:1;" onclick="saveGithubConfig()"><span data-lang-key="save">SPEICHERN</span></button>
+                    <button class="btn" style="flex:1;" onclick="syncToGithub()"><span data-lang-key="sync_now">SYNC</span></button>
+                </div>
+                <div class="sync-status" id="syncStatus" style="display:none;">
+                    <div class="sync-indicator"></div>
+                    <span data-lang-key="last_sync">Letzte Sync:</span> <span id="lastSyncTime">—</span>
                 </div>
             </div>
             <!-- ACCOUNT -->
             <div class="settings-section">
-                <div class="settings-section-title">ACCOUNT</div>
+                <div class="settings-section-title" data-lang-key="account">ACCOUNT</div>
                 <div class="account-loggedin" id="accountLoggedIn">
                     <div class="account-info-box">
                         <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
                             <div class="user-avatar" id="settingsAvatar" style="width:36px;height:36px;font-size:1.1em;"></div>
-                            <div>
-                                <div class="account-username" id="settingsUsername"></div>
+                            <div style="flex:1;">
+                                <div style="display:flex;align-items:center;">
+                                    <div class="account-username" id="settingsUsername"></div>
+                                    <div class="user-level" id="userLevel">LVL 1</div>
+                                </div>
                                 <div class="account-stats" id="settingsStats"></div>
                             </div>
                         </div>
+                        <div class="user-badges" id="userBadges"></div>
                     </div>
-                    <button class="btn btn-red" style="width:100%;" onclick="logout()">ABMELDEN</button>
+                    <button class="btn btn-red" style="width:100%;" onclick="logout()"><span data-lang-key="logout">ABMELDEN</span></button>
                 </div>
                 <div class="account-loggedout" id="accountLoggedOut">
                     <div class="form-group" style="margin-bottom:12px;">
-                        <label>BENUTZERNAME</label>
+                        <label data-lang-key="username">BENUTZERNAME</label>
                         <input type="text" id="regUsername" placeholder="z.B. MaxMustermann" maxlength="20">
                     </div>
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label data-lang-key="email">EMAIL (Optional)</label>
+                        <input type="text" id="regEmail" placeholder="max@beispiel.de">
+                    </div>
                     <div class="form-group" style="margin-bottom:14px;">
-                        <label>PASSWORT</label>
+                        <label data-lang-key="password">PASSWORT</label>
                         <input type="password" id="regPassword" placeholder="Mindestens 4 Zeichen">
                     </div>
                     <div style="display:flex;gap:8px;">
-                        <button class="btn btn-solid" style="flex:1;" onclick="loginUser()">ANMELDEN</button>
-                        <button class="btn btn-green" style="flex:1;" onclick="registerUser()">REGISTRIEREN</button>
+                        <button class="btn btn-solid" style="flex:1;" onclick="loginUser()"><span data-lang-key="login">ANMELDEN</span></button>
+                        <button class="btn btn-green" style="flex:1;" onclick="registerUser()"><span data-lang-key="register">REGISTRIEREN</span></button>
                     </div>
                 </div>
             </div>
             <!-- ADMIN -->
             <div class="settings-section">
-                <div class="settings-section-title">ADMINISTRATION</div>
+                <div class="settings-section-title" data-lang-key="admin">ADMINISTRATION</div>
                 <div class="admin-loggedin" id="adminLoggedIn">
                     <div class="admin-status-dot"></div>
-                    <span style="font-size:.85em;font-family:'Space Mono',monospace;">Admin-Modus aktiv</span>
-                    <button class="btn btn-sm btn-red" style="margin-left:auto;" onclick="adminLogout()">ABMELDEN</button>
+                    <span style="font-size:.85em;font-family:'Space Mono',monospace;" data-lang-key="admin_active">Admin-Modus aktiv</span>
+                    <button class="btn btn-sm btn-red" style="margin-left:auto;" onclick="adminLogout()"><span data-lang-key="logout">ABMELDEN</span></button>
                 </div>
                 <div id="adminLoggedOut">
                     <div class="form-group" style="margin-bottom:12px;">
-                        <label>ADMIN-PASSWORT</label>
+                        <label data-lang-key="admin_password">ADMIN-PASSWORT</label>
                         <input type="password" id="adminPassword" placeholder="Passwort" onkeydown="if(event.key==='Enter')adminLogin()">
                     </div>
-                    <button class="btn btn-solid" style="width:100%;" onclick="adminLogin()">ADMIN LOGIN</button>
+                    <button class="btn btn-solid" style="width:100%;" onclick="adminLogin()"><span data-lang-key="admin_login">ADMIN LOGIN</span></button>
                 </div>
             </div>
         </div>
@@ -295,48 +339,78 @@
 <div class="container">
     <!-- Upload -->
     <div class="upload-section" id="uploadSection">
-        <h2 class="section-title">BARCODE SCANNEN</h2>
+        <h2 class="section-title" data-lang-key="scan_barcode">BARCODE SCANNEN</h2>
         <div class="upload-area" id="uploadArea">
             <div class="upload-icon">📷</div>
-            <div class="upload-text">Barcode-Bild hochladen</div>
-            <div class="upload-subtext">Produktdaten werden automatisch erkannt</div>
+            <div class="upload-text" data-lang-key="upload_barcode">Barcode-Bild hochladen</div>
+            <div class="upload-subtext" data-lang-key="auto_detect">Produktdaten werden automatisch erkannt</div>
             <input type="file" id="fileInput" accept="image/*">
         </div>
     </div>
     <!-- Scanner -->
     <div class="scanner-container" id="scannerContainer">
-        <h2 class="section-title">BARCODE WIRD ANALYSIERT</h2>
+        <h2 class="section-title" data-lang-key="analyzing">BARCODE WIRD ANALYSIERT</h2>
         <div id="barcode-scanner"></div>
-        <div class="scanner-status" id="scannerStatus"><div class="loading"></div> Bild wird gescannt...</div>
+        <div class="scanner-status" id="scannerStatus"><div class="loading"></div> <span data-lang-key="scanning">Bild wird gescannt...</span></div>
         <div id="barcodeResult"></div>
         <div class="lookup-status" id="lookupStatus">
-            <div class="lookup-step" id="step-scan"><span class="step-icon">⬜</span><span>Barcode scannen</span></div>
-            <div class="lookup-step" id="step-lookup"><span class="step-icon">⬜</span><span>Produktdaten abrufen (Open Food Facts)</span></div>
-            <div class="lookup-step" id="step-fill"><span class="step-icon">⬜</span><span>Formular automatisch befüllen</span></div>
+            <div class="lookup-step" id="step-scan"><span class="step-icon">⬜</span><span data-lang-key="step_scan">Barcode scannen</span></div>
+            <div class="lookup-step" id="step-lookup"><span class="step-icon">⬜</span><span data-lang-key="step_lookup">Produktdaten abrufen (Open Food Facts)</span></div>
+            <div class="lookup-step" id="step-price"><span class="step-icon">⬜</span><span data-lang-key="step_price">Preisdaten abrufen</span></div>
+            <div class="lookup-step" id="step-fill"><span class="step-icon">⬜</span><span data-lang-key="step_fill">Formular automatisch befüllen</span></div>
         </div>
-        <div class="button-group" style="margin-top:18px;"><button class="btn" onclick="cancelScan()">Abbrechen</button></div>
+        <div class="button-group" style="margin-top:18px;"><button class="btn" onclick="cancelScan()"><span data-lang-key="cancel">Abbrechen</span></button></div>
     </div>
     <!-- Product Form -->
     <div class="form-section" id="productForm">
-        <h2 class="section-title">PRODUKT HINZUFÜGEN</h2>
+        <h2 class="section-title" data-lang-key="add_product_title">PRODUKT HINZUFÜGEN</h2>
         <div class="barcode-info">
-            <div><div class="barcode-label">ERKANNTER BARCODE</div><div class="barcode-code" id="detectedBarcode"></div></div>
+            <div><div class="barcode-label" data-lang-key="detected_barcode">ERKANNTER BARCODE</div><div class="barcode-code" id="detectedBarcode"></div></div>
             <div id="barcodeSourceBadge"></div>
         </div>
         <div class="product-found-banner" id="productFoundBanner">
-            <h4>✓ PRODUKT AUTOMATISCH ERKANNT</h4>
+            <h4>✓ <span data-lang-key="product_auto_detected">PRODUKT AUTOMATISCH ERKANNT</span></h4>
             <p id="productFoundText"></p>
         </div>
         <div class="barcode-preview-box"><img id="barcodePreview" alt="Barcode"></div>
         <div class="form-grid">
-            <div class="form-group"><label>Produktname *</label><input type="text" id="productName" placeholder="z.B. Milka Schokolade"></div>
-            <div class="form-group"><label>Marke</label><input type="text" id="productBrand" placeholder="z.B. Milka"></div>
-            <div class="form-group"><label>Preis (€) *</label><input type="number" id="productPrice" step="0.01" placeholder="2.99"></div>
-            <div class="form-group"><label>Kategorie</label><input type="text" id="productCategory" placeholder="z.B. Süßwaren"></div>
-            <div class="form-group full-width"><label>Produktinformationen</label><textarea id="productInfo" placeholder="Beschreibung, Inhaltsstoffe..."></textarea></div>
-            <div class="form-group full-width"><label>Deine Bewertung *</label><textarea id="reviewText" placeholder="Was hältst du von diesem Produkt?"></textarea></div>
+            <div class="form-group"><label data-lang-key="product_name">Produktname *</label><input type="text" id="productName" placeholder="z.B. Milka Schokolade"></div>
+            <div class="form-group"><label data-lang-key="brand">Marke</label><input type="text" id="productBrand" placeholder="z.B. Milka"></div>
+            <div class="form-group"><label data-lang-key="price">Preis (€) *</label><input type="number" id="productPrice" step="0.01" placeholder="2.99"></div>
+            <div class="form-group"><label data-lang-key="category">Kategorie</label><input type="text" id="productCategory" placeholder="z.B. Süßwaren"></div>
             <div class="form-group full-width">
-                <label>Bewertung (%)</label>
+                <label data-lang-key="stores">Verfügbar in Filialen</label>
+                <div id="storesContainer" class="store-list">
+                    <div class="store-chip">
+                        <input type="checkbox" id="store_rewe" value="REWE">
+                        <label for="store_rewe" style="margin:0;cursor:pointer;">REWE</label>
+                    </div>
+                    <div class="store-chip">
+                        <input type="checkbox" id="store_edeka" value="EDEKA">
+                        <label for="store_edeka" style="margin:0;cursor:pointer;">EDEKA</label>
+                    </div>
+                    <div class="store-chip">
+                        <input type="checkbox" id="store_aldi" value="ALDI">
+                        <label for="store_aldi" style="margin:0;cursor:pointer;">ALDI</label>
+                    </div>
+                    <div class="store-chip">
+                        <input type="checkbox" id="store_lidl" value="LIDL">
+                        <label for="store_lidl" style="margin:0;cursor:pointer;">LIDL</label>
+                    </div>
+                    <div class="store-chip">
+                        <input type="checkbox" id="store_kaufland" value="KAUFLAND">
+                        <label for="store_kaufland" style="margin:0;cursor:pointer;">KAUFLAND</label>
+                    </div>
+                    <div class="store-chip">
+                        <input type="checkbox" id="store_penny" value="PENNY">
+                        <label for="store_penny" style="margin:0;cursor:pointer;">PENNY</label>
+                    </div>
+                </div>
+            </div>
+            <div class="form-group full-width"><label data-lang-key="product_info">Produktinformationen</label><textarea id="productInfo" placeholder="Beschreibung, Inhaltsstoffe..."></textarea></div>
+            <div class="form-group full-width"><label data-lang-key="your_review">Deine Bewertung *</label><textarea id="reviewText" placeholder="Was hältst du von diesem Produkt?"></textarea></div>
+            <div class="form-group full-width">
+                <label data-lang-key="rating">Bewertung (%)</label>
                 <div class="rating-input">
                     <input type="range" id="ratingSlider" min="0" max="100" value="75">
                     <span class="rating-value" id="ratingValue">75%</span>
@@ -344,19 +418,19 @@
             </div>
         </div>
         <div class="button-group">
-            <button class="btn" onclick="cancelUpload()">Abbrechen</button>
-            <button class="btn btn-solid" onclick="saveProduct()">Produkt Speichern</button>
+            <button class="btn" onclick="cancelUpload()"><span data-lang-key="cancel">Abbrechen</span></button>
+            <button class="btn btn-solid" onclick="saveProduct()"><span data-lang-key="save_product">Produkt Speichern</span></button>
         </div>
     </div>
     <!-- Products -->
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;">
-        <div class="section-title" style="border:none;padding:0;margin:0;">ALLE PRODUKTE</div>
+        <div class="section-title" style="border:none;padding:0;margin:0;" data-lang-key="all_products">ALLE PRODUKTE</div>
     </div>
     <div class="products-grid" id="productsGrid"></div>
     <div class="empty-state" id="emptyState">
         <div class="empty-state-icon">📦</div>
-        <div class="empty-state-text">Noch keine Produkte</div>
-        <div class="empty-state-sub">Scanne dein erstes Produkt!</div>
+        <div class="empty-state-text" data-lang-key="no_products">Noch keine Produkte</div>
+        <div class="empty-state-sub" data-lang-key="scan_first">Scanne dein erstes Produkt!</div>
     </div>
 </div>
 
@@ -377,32 +451,33 @@
             </div>
             <div class="product-detail-image"><img id="modalBarcodeImage" alt="Produktbild"></div>
             <div class="detail-grid">
-                <div class="detail-item"><div class="detail-label">Preis</div><div class="detail-value" id="modalPrice"></div></div>
-                <div class="detail-item"><div class="detail-label">Ø Bewertung</div><div class="detail-value" id="modalRating" style="color:var(--green);"></div></div>
-                <div class="detail-item"><div class="detail-label">Bewertungen</div><div class="detail-value" id="modalReviewCount"></div></div>
+                <div class="detail-item"><div class="detail-label" data-lang-key="price">Preis</div><div class="detail-value" id="modalPrice"></div></div>
+                <div class="detail-item"><div class="detail-label" data-lang-key="avg_rating">Ø Bewertung</div><div class="detail-value" id="modalRating" style="color:var(--green);"></div></div>
+                <div class="detail-item"><div class="detail-label" data-lang-key="reviews">Bewertungen</div><div class="detail-value" id="modalReviewCount"></div></div>
             </div>
-            <div class="form-group" style="margin-bottom:18px;"><label>Kategorie</label><div id="modalCategory" style="color:var(--muted);font-size:.88em;"></div></div>
+            <div class="form-group" style="margin-bottom:18px;"><label data-lang-key="category">Kategorie</label><div id="modalCategory" style="color:var(--muted);font-size:.88em;"></div></div>
+            <div class="form-group" style="margin-bottom:18px;"><label data-lang-key="stores">Verfügbar in</label><div id="modalStores" class="store-list"></div></div>
             <div id="modalApiDataSection" class="product-api-data" style="display:none;">
                 <div class="api-data-title">◈ PRODUKTDATEN (OPEN FOOD FACTS)</div>
                 <div class="api-tags" id="modalApiTags"></div>
             </div>
-            <div class="form-group"><label>Produktinformationen</label><div id="modalInfo" style="color:var(--muted);line-height:1.62;font-size:.88em;"></div></div>
+            <div class="form-group"><label data-lang-key="product_info">Produktinformationen</label><div id="modalInfo" style="color:var(--muted);line-height:1.62;font-size:.88em;"></div></div>
             <div class="edit-form" id="editForm">
-                <h3 class="section-title" style="font-size:1.15em;">PRODUKT BEARBEITEN</h3>
+                <h3 class="section-title" style="font-size:1.15em;" data-lang-key="edit_product">PRODUKT BEARBEITEN</h3>
                 <div class="form-grid">
-                    <div class="form-group"><label>Produktname</label><input type="text" id="editProductName"></div>
-                    <div class="form-group"><label>Marke</label><input type="text" id="editProductBrand"></div>
-                    <div class="form-group"><label>Preis (€)</label><input type="number" id="editProductPrice" step="0.01"></div>
-                    <div class="form-group"><label>Kategorie</label><input type="text" id="editProductCategory"></div>
-                    <div class="form-group full-width"><label>Produktinformationen</label><textarea id="editProductInfo"></textarea></div>
+                    <div class="form-group"><label data-lang-key="product_name">Produktname</label><input type="text" id="editProductName"></div>
+                    <div class="form-group"><label data-lang-key="brand">Marke</label><input type="text" id="editProductBrand"></div>
+                    <div class="form-group"><label data-lang-key="price">Preis (€)</label><input type="number" id="editProductPrice" step="0.01"></div>
+                    <div class="form-group"><label data-lang-key="category">Kategorie</label><input type="text" id="editProductCategory"></div>
+                    <div class="form-group full-width"><label data-lang-key="product_info">Produktinformationen</label><textarea id="editProductInfo"></textarea></div>
                 </div>
                 <div class="button-group">
-                    <button class="btn" onclick="cancelEdit()">Abbrechen</button>
-                    <button class="btn btn-solid" onclick="saveEdit()">Speichern</button>
+                    <button class="btn" onclick="cancelEdit()"><span data-lang-key="cancel">Abbrechen</span></button>
+                    <button class="btn btn-solid" onclick="saveEdit()"><span data-lang-key="save">Speichern</span></button>
                 </div>
             </div>
             <div class="reviews-section">
-                <h3 class="section-title" style="font-size:1.15em;">BEWERTUNGEN</h3>
+                <h3 class="section-title" style="font-size:1.15em;" data-lang-key="reviews">BEWERTUNGEN</h3>
                 <div id="modalReviews"></div>
                 <div id="addReviewArea" style="margin-top:14px;"></div>
             </div>
@@ -413,11 +488,144 @@
 <div class="toast" id="toast"></div>
 
 <script>
-const STORAGE_KEY='pf_products_v3',USERS_KEY='pf_users_v1',SESSION_KEY='pf_session_v1',VOTES_KEY='pf_votes_v1',ADMIN_PW='Admin404';
-let isAdmin=false,currentUser=null,currentProduct=null,currentBarcodeImage=null,currentBarcode=null,isScanning=false,currentApiData=null;
+// ============= TRANSLATIONS =============
+const translations = {
+    de: {
+        add_product: 'PRODUKT',
+        settings: 'EINSTELLUNGEN',
+        settings_title: 'EINSTELLUNGEN',
+        appearance: 'DARSTELLUNG',
+        light_mode: 'Hell-Modus',
+        language: 'Sprache',
+        github_sync: 'GITHUB SYNCHRONISATION',
+        github_token: 'GITHUB TOKEN',
+        github_repo: 'REPOSITORY (user/repo)',
+        save: 'SPEICHERN',
+        sync_now: 'SYNC',
+        last_sync: 'Letzte Sync:',
+        account: 'ACCOUNT',
+        username: 'BENUTZERNAME',
+        email: 'EMAIL (Optional)',
+        password: 'PASSWORT',
+        login: 'ANMELDEN',
+        register: 'REGISTRIEREN',
+        logout: 'ABMELDEN',
+        admin: 'ADMINISTRATION',
+        admin_active: 'Admin-Modus aktiv',
+        admin_password: 'ADMIN-PASSWORT',
+        admin_login: 'ADMIN LOGIN',
+        scan_barcode: 'BARCODE SCANNEN',
+        upload_barcode: 'Barcode-Bild hochladen',
+        auto_detect: 'Produktdaten werden automatisch erkannt',
+        analyzing: 'BARCODE WIRD ANALYSIERT',
+        scanning: 'Bild wird gescannt...',
+        step_scan: 'Barcode scannen',
+        step_lookup: 'Produktdaten abrufen (Open Food Facts)',
+        step_price: 'Preisdaten abrufen',
+        step_fill: 'Formular automatisch befüllen',
+        cancel: 'Abbrechen',
+        add_product_title: 'PRODUKT HINZUFÜGEN',
+        detected_barcode: 'ERKANNTER BARCODE',
+        product_auto_detected: 'PRODUKT AUTOMATISCH ERKANNT',
+        product_name: 'Produktname *',
+        brand: 'Marke',
+        price: 'Preis (€) *',
+        category: 'Kategorie',
+        stores: 'Verfügbar in Filialen',
+        product_info: 'Produktinformationen',
+        your_review: 'Deine Bewertung *',
+        rating: 'Bewertung (%)',
+        save_product: 'Produkt Speichern',
+        all_products: 'ALLE PRODUKTE',
+        no_products: 'Noch keine Produkte',
+        scan_first: 'Scanne dein erstes Produkt!',
+        avg_rating: 'Ø Bewertung',
+        reviews: 'Bewertungen',
+        edit_product: 'PRODUKT BEARBEITEN'
+    },
+    en: {
+        add_product: 'PRODUCT',
+        settings: 'SETTINGS',
+        settings_title: 'SETTINGS',
+        appearance: 'APPEARANCE',
+        light_mode: 'Light Mode',
+        language: 'Language',
+        github_sync: 'GITHUB SYNCHRONIZATION',
+        github_token: 'GITHUB TOKEN',
+        github_repo: 'REPOSITORY (user/repo)',
+        save: 'SAVE',
+        sync_now: 'SYNC',
+        last_sync: 'Last Sync:',
+        account: 'ACCOUNT',
+        username: 'USERNAME',
+        email: 'EMAIL (Optional)',
+        password: 'PASSWORD',
+        login: 'LOGIN',
+        register: 'REGISTER',
+        logout: 'LOGOUT',
+        admin: 'ADMINISTRATION',
+        admin_active: 'Admin mode active',
+        admin_password: 'ADMIN PASSWORD',
+        admin_login: 'ADMIN LOGIN',
+        scan_barcode: 'SCAN BARCODE',
+        upload_barcode: 'Upload Barcode Image',
+        auto_detect: 'Product data will be detected automatically',
+        analyzing: 'ANALYZING BARCODE',
+        scanning: 'Scanning image...',
+        step_scan: 'Scan barcode',
+        step_lookup: 'Fetch product data (Open Food Facts)',
+        step_price: 'Fetch price data',
+        step_fill: 'Auto-fill form',
+        cancel: 'Cancel',
+        add_product_title: 'ADD PRODUCT',
+        detected_barcode: 'DETECTED BARCODE',
+        product_auto_detected: 'PRODUCT AUTO-DETECTED',
+        product_name: 'Product Name *',
+        brand: 'Brand',
+        price: 'Price (€) *',
+        category: 'Category',
+        stores: 'Available in Stores',
+        product_info: 'Product Information',
+        your_review: 'Your Review *',
+        rating: 'Rating (%)',
+        save_product: 'Save Product',
+        all_products: 'ALL PRODUCTS',
+        no_products: 'No products yet',
+        scan_first: 'Scan your first product!',
+        avg_rating: 'Avg. Rating',
+        reviews: 'Reviews',
+        edit_product: 'EDIT PRODUCT'
+    }
+};
+
+let currentLang = 'de';
+
+function changeLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem('pf_language', lang);
+    document.documentElement.lang = lang;
+    
+    // Update all elements with data-lang-key
+    document.querySelectorAll('[data-lang-key]').forEach(el => {
+        const key = el.getAttribute('data-lang-key');
+        if (translations[lang][key]) {
+            el.textContent = translations[lang][key];
+        }
+    });
+    
+    showToast(lang === 'de' ? 'Sprache geändert zu Deutsch' : 'Language changed to English');
+}
+
+// ============= CORE VARIABLES =============
+const STORAGE_KEY='pf_products_v3',USERS_KEY='pf_users_v2',SESSION_KEY='pf_session_v1',VOTES_KEY='pf_votes_v1',ADMIN_PW='Admin404',GITHUB_KEY='pf_github_config';
+let isAdmin=false,currentUser=null,currentProduct=null,currentBarcodeImage=null,currentBarcode=null,isScanning=false,currentApiData=null,githubConfig=null;
 
 document.addEventListener('DOMContentLoaded',()=>{
     loadSession();
+    loadGithubConfig();
+    const savedLang = localStorage.getItem('pf_language') || 'de';
+    document.getElementById('languageSelect').value = savedLang;
+    changeLanguage(savedLang);
     applyTheme(localStorage.getItem('pf_theme')||'dark');
     setupEventListeners();
     displayProducts();
@@ -442,6 +650,124 @@ function applyTheme(t){
 }
 function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
 
+/* GITHUB INTEGRATION */
+function loadGithubConfig(){
+    try{
+        const cfg = JSON.parse(localStorage.getItem(GITHUB_KEY));
+        if(cfg && cfg.token && cfg.repo) {
+            githubConfig = cfg;
+            document.getElementById('githubToken').value = '••••••••';
+            document.getElementById('githubRepo').value = cfg.repo;
+            if(cfg.lastSync) {
+                document.getElementById('syncStatus').style.display = 'flex';
+                document.getElementById('lastSyncTime').textContent = fmtDate(cfg.lastSync);
+            }
+        }
+    }catch{}
+}
+
+function saveGithubConfig(){
+    const token = document.getElementById('githubToken').value.trim();
+    const repo = document.getElementById('githubRepo').value.trim();
+    
+    if(!token || token === '••••••••') {
+        if(githubConfig && githubConfig.token) {
+            // Keep existing token
+        } else {
+            showToast('Bitte GitHub Token eingeben');
+            return;
+        }
+    } else {
+        githubConfig = githubConfig || {};
+        githubConfig.token = token;
+    }
+    
+    if(!repo || !repo.includes('/')) {
+        showToast('Bitte gültiges Repository eingeben (user/repo)');
+        return;
+    }
+    
+    githubConfig.repo = repo;
+    localStorage.setItem(GITHUB_KEY, JSON.stringify(githubConfig));
+    document.getElementById('githubToken').value = '••••••••';
+    showToast('GitHub-Konfiguration gespeichert ✓');
+}
+
+async function syncToGithub(){
+    if(!githubConfig || !githubConfig.token || !githubConfig.repo) {
+        showToast('Bitte erst GitHub-Konfiguration speichern');
+        return;
+    }
+    
+    showToast('Synchronisiere mit GitHub...');
+    
+    try {
+        const products = getProducts();
+        const users = getUsers();
+        const votes = getVotes();
+        
+        const data = {
+            products,
+            users,
+            votes,
+            syncedAt: new Date().toISOString()
+        };
+        
+        const [owner, repo] = githubConfig.repo.split('/');
+        const path = 'data/produktforum-data.json';
+        
+        // Get current file SHA if exists
+        let sha = null;
+        try {
+            const getRes = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+                headers: {
+                    'Authorization': `token ${githubConfig.token}`,
+                    'Accept': 'application/vnd.github.v3+json'
+                }
+            });
+            if(getRes.ok) {
+                const fileData = await getRes.json();
+                sha = fileData.sha;
+            }
+        } catch(e) {
+            // File doesn't exist yet, that's ok
+        }
+        
+        // Create or update file
+        const content = btoa(unescape(encodeURIComponent(JSON.stringify(data, null, 2))));
+        const payload = {
+            message: `Update ProduktForum data - ${new Date().toISOString()}`,
+            content,
+            sha
+        };
+        
+        const res = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `token ${githubConfig.token}`,
+                'Content-Type': 'application/json',
+                'Accept': 'application/vnd.github.v3+json'
+            },
+            body: JSON.stringify(payload)
+        });
+        
+        if(res.ok) {
+            githubConfig.lastSync = new Date().toISOString();
+            localStorage.setItem(GITHUB_KEY, JSON.stringify(githubConfig));
+            document.getElementById('syncStatus').style.display = 'flex';
+            document.getElementById('lastSyncTime').textContent = fmtDate(githubConfig.lastSync);
+            showToast('✓ Erfolgreich mit GitHub synchronisiert!');
+        } else {
+            const error = await res.json();
+            console.error('GitHub sync error:', error);
+            showToast('❌ GitHub Sync fehlgeschlagen');
+        }
+    } catch(error) {
+        console.error('Sync error:', error);
+        showToast('❌ Fehler bei der Synchronisation');
+    }
+}
+
 /* SETTINGS */
 function openSettings(){document.getElementById('settingsOverlay').classList.add('active');updateSettingsUI();}
 function closeSettings(){document.getElementById('settingsOverlay').classList.remove('active');}
@@ -456,7 +782,20 @@ function updateSettingsUI(){
         av.style.background=currentUser.color;av.style.color='#000';
         const products=getProducts();
         const rc=products.reduce((s,p)=>s+p.reviews.filter(r=>r.author===currentUser.username).length,0);
-        document.getElementById('settingsStats').textContent=rc+' Bewertung(en) verfasst';
+        const xp = currentUser.xp || 0;
+        const level = Math.floor(xp / 100) + 1;
+        document.getElementById('userLevel').textContent = 'LVL ' + level;
+        document.getElementById('settingsStats').textContent=rc+' Bewertung(en) · '+xp+' XP';
+        
+        // Badges
+        const badges = [];
+        if(rc >= 1) badges.push('🌟 Erstes Review');
+        if(rc >= 5) badges.push('📝 Reviewer');
+        if(rc >= 10) badges.push('🏆 Pro Reviewer');
+        if(products.filter(p => p.reviews.some(r => r.author === currentUser.username)).length >= 3) badges.push('🔍 Scout');
+        
+        const badgesEl = document.getElementById('userBadges');
+        badgesEl.innerHTML = badges.map(b => `<div class="badge">${b}</div>`).join('');
     } else {
         li.classList.remove('active');lo.classList.remove('hidden');
     }
@@ -474,16 +813,18 @@ function randomColor(){return COLORS[Math.floor(Math.random()*COLORS.length)];}
 
 function registerUser(){
     const uname=document.getElementById('regUsername').value.trim();
+    const email=document.getElementById('regEmail').value.trim();
     const pw=document.getElementById('regPassword').value;
     if(!uname||uname.length<2){showToast('Name muss mind. 2 Zeichen haben');return;}
     if(!pw||pw.length<4){showToast('Passwort muss mind. 4 Zeichen haben');return;}
     const users=getUsers();
     if(users[uname]){showToast('Benutzername bereits vergeben!');return;}
-    users[uname]={pw,color:randomColor()};
+    users[uname]={pw,email,color:randomColor(),xp:0,joined:new Date().toISOString()};
     saveUsers(users);
-    currentUser={username:uname,color:users[uname].color};
+    currentUser={username:uname,color:users[uname].color,xp:0};
     saveSession(currentUser);updateHeaderUser();updateSettingsUI();
     showToast('Willkommen, '+uname+'! 👋');
+    syncToGithub();
 }
 function loginUser(){
     const uname=document.getElementById('regUsername').value.trim();
@@ -491,7 +832,7 @@ function loginUser(){
     const users=getUsers();
     if(!users[uname]){showToast('Benutzer nicht gefunden');return;}
     if(users[uname].pw!==pw){showToast('Falsches Passwort');return;}
-    currentUser={username:uname,color:users[uname].color};
+    currentUser={username:uname,color:users[uname].color,xp:users[uname].xp||0};
     saveSession(currentUser);updateHeaderUser();updateSettingsUI();
     showToast('Willkommen zurück, '+uname+'! 👋');
 }
@@ -510,6 +851,18 @@ function updateHeaderUser(){
         av.textContent=currentUser.username[0].toUpperCase();
         av.style.background=currentUser.color;av.style.color='#000';
     } else {chip.classList.remove('active');}
+}
+
+function addXP(amount) {
+    if(!currentUser) return;
+    const users = getUsers();
+    if(users[currentUser.username]) {
+        users[currentUser.username].xp = (users[currentUser.username].xp || 0) + amount;
+        currentUser.xp = users[currentUser.username].xp;
+        saveUsers(users);
+        saveSession(currentUser);
+        updateSettingsUI();
+    }
 }
 
 /* ADMIN */
@@ -546,6 +899,7 @@ function voteReview(reviewId,voteType){
             saveProducts(products);showProductDetail(products[pidx]);
         }
     }
+    syncToGithub();
 }
 function getUserVote(reviewId){
     if(!currentUser)return null;
@@ -596,28 +950,117 @@ function scanBarcode(imageDataUrl){
 }
 async function lookupProduct(barcode){
     setStep('lookup','active');currentApiData=null;
-    if(barcode.startsWith('MANUAL_')){setStep('lookup','error');setStep('fill','done');showForm(null);return;}
+    if(barcode.startsWith('MANUAL_')){
+        setStep('lookup','error');
+        setStep('price','error');
+        setStep('fill','done');
+        showForm(null);
+        return;
+    }
     try{
         const res=await fetch('https://world.openfoodfacts.org/api/v2/product/'+barcode+'.json');
         const data=await res.json();
         if(data.status===1&&data.product){
-            setStep('lookup','done');setStep('fill','active');currentApiData=data.product;
+            setStep('lookup','done');
+            currentApiData=data.product;
+            
+            // Fetch price data
+            setStep('price','active');
+            await fetchPriceData(barcode, data.product);
+            
             const existing=getProducts().find(p=>p.barcode===barcode);
-            if(existing){document.getElementById('scannerContainer').style.display='none';showProductDetail(existing);return;}
-            setTimeout(()=>{setStep('fill','done');document.getElementById('scannerContainer').style.display='none';showForm(data.product);},600);
+            if(existing){
+                document.getElementById('scannerContainer').style.display='none';
+                showProductDetail(existing);
+                return;
+            }
+            setTimeout(()=>{
+                setStep('fill','done');
+                document.getElementById('scannerContainer').style.display='none';
+                showForm(data.product);
+            },600);
         } else {
             setStep('lookup','error');
+            setStep('price','error');
             const existing=getProducts().find(p=>p.barcode===barcode);
-            if(existing){document.getElementById('scannerContainer').style.display='none';showProductDetail(existing);return;}
-            setStep('fill','done');setTimeout(()=>{document.getElementById('scannerContainer').style.display='none';showForm(null);},500);
+            if(existing){
+                document.getElementById('scannerContainer').style.display='none';
+                showProductDetail(existing);
+                return;
+            }
+            setStep('fill','done');
+            setTimeout(()=>{
+                document.getElementById('scannerContainer').style.display='none';
+                showForm(null);
+            },500);
         }
     }catch{
         setStep('lookup','error');
+        setStep('price','error');
         const existing=getProducts().find(p=>p.barcode===barcode);
-        if(existing){document.getElementById('scannerContainer').style.display='none';showProductDetail(existing);return;}
-        setStep('fill','done');setTimeout(()=>{document.getElementById('scannerContainer').style.display='none';showForm(null);},500);
+        if(existing){
+            document.getElementById('scannerContainer').style.display='none';
+            showProductDetail(existing);
+            return;
+        }
+        setStep('fill','done');
+        setTimeout(()=>{
+            document.getElementById('scannerContainer').style.display='none';
+            showForm(null);
+        },500);
     }
 }
+
+async function fetchPriceData(barcode, productData) {
+    try {
+        // Try to get price from Open Food Facts stores data
+        if(productData.stores_tags && productData.stores_tags.length > 0) {
+            setStep('price','done');
+            
+            // Auto-select stores
+            const storeMap = {
+                'rewe': 'store_rewe',
+                'edeka': 'store_edeka',
+                'aldi': 'store_aldi',
+                'lidl': 'store_lidl',
+                'kaufland': 'store_kaufland',
+                'penny': 'store_penny'
+            };
+            
+            productData.stores_tags.forEach(store => {
+                const storeLower = store.toLowerCase().replace('en:', '');
+                if(storeMap[storeLower]) {
+                    const checkbox = document.getElementById(storeMap[storeLower]);
+                    if(checkbox) {
+                        checkbox.checked = true;
+                        checkbox.parentElement.classList.add('auto-filled');
+                    }
+                }
+            });
+            
+            return;
+        }
+        
+        // Fallback: simulate price lookup based on category
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Estimate price based on product data
+        let estimatedPrice = 2.99; // Default
+        
+        const categories = productData.categories_tags || [];
+        if(categories.some(c => c.includes('chocolate') || c.includes('snack'))) estimatedPrice = 1.99;
+        if(categories.some(c => c.includes('beverage') || c.includes('drink'))) estimatedPrice = 1.49;
+        if(categories.some(c => c.includes('milk') || c.includes('dairy'))) estimatedPrice = 0.99;
+        
+        setStep('price','done');
+        return estimatedPrice;
+        
+    } catch(e) {
+        setStep('price','error');
+        return null;
+    }
+}
+
 function setStep(step,state){
     const el=document.getElementById('step-'+step);if(!el)return;
     el.className='lookup-step '+state;
@@ -633,6 +1076,10 @@ async function showForm(product){
         const name=product.product_name_de||product.product_name||product.product_name_en||'';
         const brand=product.brands||'';
         const cat=product.categories_tags?.[0]?.replace('en:','').replace(/-/g,' ')||'';
+        
+        // Get estimated price
+        const estimatedPrice = await fetchPriceData(currentBarcode, product);
+        
         let dp=[];
         if(product.quantity)dp.push('Menge: '+product.quantity);
         const ing=product.ingredients_text_de||product.ingredients_text;
@@ -640,7 +1087,16 @@ async function showForm(product){
         if(product.nutriscore_grade)dp.push('Nutri-Score: '+product.nutriscore_grade.toUpperCase());
         if(product.packaging)dp.push('Verpackung: '+product.packaging);
         if(product.countries)dp.push('Herkunft: '+product.countries);
-        setAutoField('productName',name);setAutoField('productBrand',brand);setAutoField('productCategory',cat);setAutoField('productInfo',dp.join('\n\n'));
+        
+        setAutoField('productName',name);
+        setAutoField('productBrand',brand);
+        setAutoField('productCategory',cat);
+        setAutoField('productInfo',dp.join('\n\n'));
+        
+        if(estimatedPrice) {
+            setAutoField('productPrice', estimatedPrice);
+        }
+        
         const apiImg=product.image_front_small_url||product.image_front_url||product.image_url;
         if(apiImg){const b64=await fetchImageAsBase64(apiImg);if(b64){currentBarcodeImage=b64;document.getElementById('barcodePreview').src=b64;}}
         document.getElementById('productFoundBanner').style.display='block';
@@ -660,20 +1116,56 @@ function saveProduct(){
     const price=document.getElementById('productPrice').value;
     const reviewText=document.getElementById('reviewText').value.trim();
     if(!name||!price||!reviewText){showToast('Bitte Name, Preis und Bewertungstext ausfüllen');return;}
+    
+    // Get selected stores
+    const stores = [];
+    ['rewe','edeka','aldi','lidl','kaufland','penny'].forEach(store => {
+        if(document.getElementById('store_'+store)?.checked) {
+            stores.push(store.toUpperCase());
+        }
+    });
+    
     const products=getProducts();
     const newProduct={
-        id:Date.now().toString(),barcode:currentBarcode,barcodeImage:currentBarcodeImage,
-        name,brand:document.getElementById('productBrand').value.trim(),
+        id:Date.now().toString(),
+        barcode:currentBarcode,
+        barcodeImage:currentBarcodeImage,
+        name,
+        brand:document.getElementById('productBrand').value.trim(),
         category:document.getElementById('productCategory').value.trim(),
-        price:parseFloat(price),info:document.getElementById('productInfo').value.trim()||'Keine weiteren Informationen',
+        price:parseFloat(price),
+        stores: stores,
+        info:document.getElementById('productInfo').value.trim()||'Keine weiteren Informationen',
         fromApi:!!currentApiData,
-        apiData:currentApiData?{nutriscore:currentApiData.nutriscore_grade,quantity:currentApiData.quantity,countries:currentApiData.countries,packaging:currentApiData.packaging,labels:currentApiData.labels_tags}:null,
-        reviews:[{id:Date.now().toString(),text:reviewText,rating:parseInt(document.getElementById('ratingSlider').value),author:currentUser?currentUser.username:'Anonym',date:new Date().toISOString(),likes:0,dislikes:0}],
+        apiData:currentApiData?{
+            nutriscore:currentApiData.nutriscore_grade,
+            quantity:currentApiData.quantity,
+            countries:currentApiData.countries,
+            packaging:currentApiData.packaging,
+            labels:currentApiData.labels_tags
+        }:null,
+        reviews:[{
+            id:Date.now().toString(),
+            text:reviewText,
+            rating:parseInt(document.getElementById('ratingSlider').value),
+            author:currentUser?currentUser.username:'Anonym',
+            date:new Date().toISOString(),
+            likes:0,
+            dislikes:0
+        }],
         createdAt:new Date().toISOString()
     };
-    products.push(newProduct);saveProducts(products);
-    resetForm();displayProducts();showProductDetail(newProduct);
+    products.push(newProduct);
+    saveProducts(products);
+    
+    // Add XP for creating product
+    if(currentUser) addXP(50);
+    
+    resetForm();
+    displayProducts();
+    showProductDetail(newProduct);
     showToast('Produkt gespeichert ✓');
+    syncToGithub();
 }
 
 /* DISPLAY */
@@ -718,6 +1210,15 @@ function showProductDetail(product){
     document.getElementById('modalReviewCount').textContent=product.reviews.length;
     document.getElementById('modalInfo').textContent=product.info;
     document.getElementById('modalCategory').textContent=product.category||'—';
+    
+    // Display stores
+    const storesEl = document.getElementById('modalStores');
+    if(product.stores && product.stores.length > 0) {
+        storesEl.innerHTML = product.stores.map(s => `<div class="store-chip" style="cursor:default;">${s}</div>`).join('');
+    } else {
+        storesEl.innerHTML = '<span style="color:var(--muted);">Keine Filialen angegeben</span>';
+    }
+    
     document.getElementById('modalApiSource').textContent=product.fromApi?'◈ OPEN FOOD FACTS':'';
     const apiSec=document.getElementById('modalApiDataSection');
     if(product.apiData){
@@ -808,16 +1309,33 @@ function submitNewReview(){
     const products=getProducts();
     const idx=products.findIndex(p=>p.id===currentProduct.id);
     if(idx!==-1){
-        products[idx].reviews.push({id:Date.now().toString(),text,rating,author:currentUser.username,date:new Date().toISOString(),likes:0,dislikes:0});
-        saveProducts(products);displayProducts();showProductDetail(products[idx]);
+        products[idx].reviews.push({
+            id:Date.now().toString(),
+            text,
+            rating,
+            author:currentUser.username,
+            date:new Date().toISOString(),
+            likes:0,
+            dislikes:0
+        });
+        saveProducts(products);
+        addXP(25); // XP for review
+        displayProducts();
+        showProductDetail(products[idx]);
         showToast('Bewertung gespeichert ✓');
+        syncToGithub();
     }
 }
 
 /* ADMIN CONTROLS */
 function deleteProduct(id,e){
     e.stopPropagation();if(!isAdmin)return;
-    if(confirm('Produkt wirklich löschen?')){saveProducts(getProducts().filter(p=>p.id!==id));displayProducts();showToast('Produkt gelöscht');}
+    if(confirm('Produkt wirklich löschen?')){
+        saveProducts(getProducts().filter(p=>p.id!==id));
+        displayProducts();
+        showToast('Produkt gelöscht');
+        syncToGithub();
+    }
 }
 function editProduct(id,e){
     e.stopPropagation();if(!isAdmin)return;
@@ -838,11 +1356,17 @@ function saveEdit(){
     const products=getProducts();
     const idx=products.findIndex(p=>p.id===currentProduct.id);
     if(idx!==-1){
-        products[idx].name=name;products[idx].brand=document.getElementById('editProductBrand').value.trim();
-        products[idx].price=parseFloat(price);products[idx].category=document.getElementById('editProductCategory').value.trim();
+        products[idx].name=name;
+        products[idx].brand=document.getElementById('editProductBrand').value.trim();
+        products[idx].price=parseFloat(price);
+        products[idx].category=document.getElementById('editProductCategory').value.trim();
         products[idx].info=document.getElementById('editProductInfo').value.trim();
-        saveProducts(products);displayProducts();showProductDetail(products[idx]);
-        document.getElementById('editForm').classList.remove('active');showToast('Änderungen gespeichert');
+        saveProducts(products);
+        displayProducts();
+        showProductDetail(products[idx]);
+        document.getElementById('editForm').classList.remove('active');
+        showToast('Änderungen gespeichert');
+        syncToGithub();
     }
 }
 function deleteReview(reviewId){
@@ -851,37 +1375,81 @@ function deleteReview(reviewId){
     if(idx!==-1){
         products[idx].reviews=products[idx].reviews.filter(r=>r.id!==reviewId);
         if(!products[idx].reviews.length){
-            if(confirm('Letzte Bewertung gelöscht. Auch Produkt löschen?')){products.splice(idx,1);saveProducts(products);displayProducts();closeModal();return;}
+            if(confirm('Letzte Bewertung gelöscht. Auch Produkt löschen?')){
+                products.splice(idx,1);
+                saveProducts(products);
+                displayProducts();
+                closeModal();
+                syncToGithub();
+                return;
+            }
         }
-        saveProducts(products);displayProducts();showProductDetail(products[idx]);showToast('Bewertung gelöscht');
+        saveProducts(products);
+        displayProducts();
+        showProductDetail(products[idx]);
+        showToast('Bewertung gelöscht');
+        syncToGithub();
     }
 }
 
 /* HELPERS */
 function calcAvg(reviews){if(!reviews.length)return 0;return Math.round(reviews.reduce((s,r)=>s+r.rating,0)/reviews.length);}
 function trunc(t,n){return t&&t.length>n?t.substring(0,n)+'...':(t||'');}
-function fmtDate(s){return new Date(s).toLocaleDateString('de-DE',{year:'numeric',month:'short',day:'numeric'});}
+function fmtDate(s){return new Date(s).toLocaleDateString(currentLang === 'de' ? 'de-DE' : 'en-US',{year:'numeric',month:'short',day:'numeric'});}
 function closeModal(){document.getElementById('productModal').classList.remove('active');document.getElementById('editForm').classList.remove('active');document.body.style.overflow='auto';}
 function showUploadSection(){document.getElementById('uploadSection').style.display='block';window.scrollTo({top:0,behavior:'smooth'});}
 function cancelUpload(){resetForm();}
 function cancelScan(){
-    isScanning=false;document.getElementById('scannerContainer').style.display='none';
+    isScanning=false;
+    document.getElementById('scannerContainer').style.display='none';
     document.getElementById('uploadSection').style.display='none';
-    document.getElementById('barcodeResult').innerHTML='';document.getElementById('lookupStatus').style.display='none';
-    currentBarcode=null;currentBarcodeImage=null;currentApiData=null;
+    document.getElementById('barcodeResult').innerHTML='';
+    document.getElementById('lookupStatus').style.display='none';
+    currentBarcode=null;
+    currentBarcodeImage=null;
+    currentApiData=null;
 }
 function resetForm(){
     ['uploadSection','productForm','scannerContainer'].forEach(id=>document.getElementById(id).style.display='none');
-    ['productName','productBrand','productPrice','productCategory','productInfo','reviewText'].forEach(id=>{const el=document.getElementById(id);el.value='';el.classList.remove('auto-filled');});
+    ['productName','productBrand','productPrice','productCategory','productInfo','reviewText'].forEach(id=>{
+        const el=document.getElementById(id);
+        el.value='';
+        el.classList.remove('auto-filled');
+    });
+    // Reset store checkboxes
+    ['rewe','edeka','aldi','lidl','kaufland','penny'].forEach(store => {
+        const checkbox = document.getElementById('store_'+store);
+        if(checkbox) {
+            checkbox.checked = false;
+            checkbox.parentElement.classList.remove('auto-filled');
+        }
+    });
     document.getElementById('fileInput').value='';
-    document.getElementById('ratingSlider').value=75;document.getElementById('ratingValue').textContent='75%';
-    document.getElementById('barcodeResult').innerHTML='';document.getElementById('lookupStatus').style.display='none';
+    document.getElementById('ratingSlider').value=75;
+    document.getElementById('ratingValue').textContent='75%';
+    document.getElementById('barcodeResult').innerHTML='';
+    document.getElementById('lookupStatus').style.display='none';
     document.getElementById('productFoundBanner').style.display='none';
-    ['step-scan','step-lookup','step-fill'].forEach(id=>{const el=document.getElementById(id);if(el){el.className='lookup-step';el.querySelector('.step-icon').textContent='⬜';}});
-    currentBarcode=null;currentBarcodeImage=null;currentApiData=null;isScanning=false;
+    ['step-scan','step-lookup','step-price','step-fill'].forEach(id=>{
+        const el=document.getElementById(id);
+        if(el){
+            el.className='lookup-step';
+            el.querySelector('.step-icon').textContent='⬜';
+        }
+    });
+    currentBarcode=null;
+    currentBarcodeImage=null;
+    currentApiData=null;
+    isScanning=false;
 }
 let toastTimer;
-function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
+function showToast(msg){
+    const t=document.getElementById('toast');
+    t.textContent=msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
 </script>
 </body>
 </html>
