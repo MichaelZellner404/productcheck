@@ -40,7 +40,15 @@
       "createdAt": "2026-02-13T10:52:51.704Z"
     }
   ],
-  "users": {},
+  "users": {
+    "Admin": {
+      "pw": "@MichisNudelSalat123",
+      "email": "michael.m.zellner@outlook.de",
+      "color": "#3498db",
+      "xp": 0,
+      "joined": "2026-02-13T10:53:44.629Z"
+    }
+  },
   "votes": {},
-  "syncedAt": "2026-02-13T10:52:51.712Z"
+  "syncedAt": "2026-02-13T10:53:44.630Z"
 }
