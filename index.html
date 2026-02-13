@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ProduktCheck - Bewerte deine Produkte</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .subtitle {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .upload-section {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: #f8f9ff;
+        }
+
+        .upload-area:hover {
+            background: #f0f2ff;
+            border-color: #764ba2;
+        }
+
+        .upload-area.dragover {
+            background: #e8ebff;
+            border-color: #764ba2;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 4em;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 1.2em;
+            color: #667eea;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .preview-section {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .barcode-preview {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .barcode-preview img {
+            max-width: 100%;
+            max-height: 300px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+
+        .product-form {
+            display: none;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        input[type="text"],
+        input[type="number"],
+        textarea {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .rating-input {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            height: 8px;
+            border-radius: 5px;
+            background: #e0e0e0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #667eea;
+            cursor: pointer;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+            border: none;
+        }
+
+        .rating-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #667eea;
+            min-width: 60px;
+            text-align: right;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        .btn-secondary:hover {
+            background: #e0e0e0;
+        }
+
+        .product-display {
+            display: none;
+        }
+
+        .product-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+
+        .product-header {
+            border-bottom: 2px solid #f0f0f0;
+            padding-bottom: 20px;
+            margin-bottom: 25px;
+        }
+
+        .product-name {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .product-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .info-item {
+            background: #f8f9ff;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .info-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .info-value {
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .rating-display {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+        .rating-number {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .rating-label {
+            font-size: 1em;
+            opacity: 0.9;
+        }
+
+        .reviews-section {
+            margin-top: 30px;
+        }
+
+        .section-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .review {
+            background: #f8f9ff;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .review-rating {
+            font-weight: bold;
+            color: #667eea;
+            font-size: 1.2em;
+        }
+
+        .review-date {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .review-text {
+            color: #555;
+            line-height: 1.6;
+        }
+
+        .add-review-btn {
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .new-review-form {
+            display: none;
+            background: #f8f9ff;
+            padding: 25px;
+            border-radius: 10px;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .upload-section,
+            .product-card {
+                padding: 25px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🛒 ProduktCheck</h1>
+            <p class="subtitle">Scanne, bewerte und teile deine Produkterfahrungen</p>
+        </header>
+
+        <!-- Upload Section -->
+        <div class="upload-section" id="uploadSection">
+            <div class="upload-area" id="uploadArea">
+                <div class="upload-icon">📸</div>
+                <div class="upload-text">Barcode hochladen</div>
+                <div class="upload-subtext">Klicken oder Bild hierher ziehen</div>
+                <input type="file" id="fileInput" accept="image/*">
+            </div>
+
+            <div class="preview-section" id="previewSection">
+                <div class="barcode-preview">
+                    <img id="barcodeImage" alt="Barcode Vorschau">
+                </div>
+                <button class="btn-secondary" onclick="resetUpload()">Anderes Bild wählen</button>
+            </div>
+
+            <div class="product-form" id="productForm">
+                <h2 style="margin-bottom: 25px; color: #333;">Neues Produkt hinzufügen</h2>
+                
+                <div class="form-group">
+                    <label for="productName">Produktname *</label>
+                    <input type="text" id="productName" required placeholder="z.B. Milka Schokolade">
+                </div>
+
+                <div class="form-group">
+                    <label for="productPrice">Preis (€) *</label>
+                    <input type="number" id="productPrice" step="0.01" required placeholder="z.B. 2.99">
+                </div>
+
+                <div class="form-group">
+                    <label for="productInfo">Produktinformationen</label>
+                    <textarea id="productInfo" placeholder="Beschreibung, Inhaltsstoffe, Besonderheiten..."></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label for="reviewText">Deine Bewertung *</label>
+                    <textarea id="reviewText" required placeholder="Was hältst du von diesem Produkt?"></textarea>
+                </div>
+
+                <div class="form-group">
+                    <label>Bewertung (in %) *</label>
+                    <div class="rating-input">
+                        <input type="range" id="ratingSlider" min="0" max="100" value="75">
+                        <span class="rating-value" id="ratingValue">75%</span>
+                    </div>
+                </div>
+
+                <div class="button-group">
+                    <button class="btn-secondary" onclick="cancelUpload()">Abbrechen</button>
+                    <button class="btn-primary" onclick="saveProduct()">Produkt speichern</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Product Display Section -->
+        <div class="product-display" id="productDisplay">
+            <div class="product-card">
+                <div class="product-header">
+                    <h2 class="product-name" id="displayProductName"></h2>
+                </div>
+
+                <div class="product-info">
+                    <div class="info-item">
+                        <div class="info-label">Preis</div>
+                        <div class="info-value" id="displayPrice"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Durchschnittsbewertung</div>
+                        <div class="info-value" id="displayAvgRating"></div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Anzahl Bewertungen</div>
+                        <div class="info-value" id="displayReviewCount"></div>
+                    </div>
+                </div>
+
+                <div class="info-item" style="margin-bottom: 25px;">
+                    <div class="info-label">Produktinformationen</div>
+                    <div class="info-value" id="displayInfo" style="font-weight: normal; line-height: 1.6;"></div>
+                </div>
+
+                <div class="reviews-section">
+                    <h3 class="section-title">Bewertungen</h3>
+                    <div id="reviewsList"></div>
+
+                    <button class="btn-primary add-review-btn" onclick="toggleNewReviewForm()">
+                        Eigene Bewertung hinzufügen
+                    </button>
+
+                    <div class="new-review-form" id="newReviewForm">
+                        <div class="form-group">
+                            <label for="newReviewText">Deine Bewertung</label>
+                            <textarea id="newReviewText" required placeholder="Teile deine Erfahrung mit diesem Produkt..."></textarea>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Bewertung (in %)</label>
+                            <div class="rating-input">
+                                <input type="range" id="newRatingSlider" min="0" max="100" value="75">
+                                <span class="rating-value" id="newRatingValue">75%</span>
+                            </div>
+                        </div>
+
+                        <div class="button-group">
+                            <button class="btn-secondary" onclick="cancelNewReview()">Abbrechen</button>
+                            <button class="btn-primary" onclick="addNewReview()">Bewertung speichern</button>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="btn-secondary" onclick="backToUpload()" style="width: 100%; margin-top: 30px;">
+                    Neues Produkt scannen
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Storage key
+        const STORAGE_KEY = 'produktcheck_products';
+        let currentBarcode = null;
+        let currentBarcodeImage = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            setupEventListeners();
+            loadProducts();
+        });
+
+        function setupEventListeners() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const ratingSlider = document.getElementById('ratingSlider');
+            const ratingValue = document.getElementById('ratingValue');
+            const newRatingSlider = document.getElementById('newRatingSlider');
+            const newRatingValue = document.getElementById('newRatingValue');
+
+            // Upload area click
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            // Drag and drop
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                const file = e.dataTransfer.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    handleImageUpload(file);
+                }
+            });
+
+            // File input change
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    handleImageUpload(file);
+                }
+            });
+
+            // Rating sliders
+            ratingSlider.addEventListener('input', (e) => {
+                ratingValue.textContent = e.target.value + '%';
+            });
+
+            newRatingSlider.addEventListener('input', (e) => {
+                newRatingValue.textContent = e.target.value + '%';
+            });
+        }
+
+        function handleImageUpload(file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                currentBarcodeImage = e.target.result;
+                document.getElementById('barcodeImage').src = e.target.result;
+                document.getElementById('previewSection').style.display = 'block';
+                
+                // Simulate barcode reading (in real app, use barcode scanner library)
+                currentBarcode = generateBarcodeFromImage(e.target.result);
+                
+                // Check if product exists
+                const products = getProducts();
+                const existingProduct = products.find(p => p.barcode === currentBarcode);
+                
+                if (existingProduct) {
+                    displayProduct(existingProduct);
+                } else {
+                    document.getElementById('productForm').style.display = 'block';
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function generateBarcodeFromImage(imageData) {
+            // Simple hash function for demo (in real app, use actual barcode scanner)
+            let hash = 0;
+            for (let i = 0; i < imageData.length; i += 100) {
+                hash = ((hash << 5) - hash) + imageData.charCodeAt(i);
+                hash = hash & hash;
+            }
+            return 'BC' + Math.abs(hash).toString().substring(0, 12);
+        }
+
+        function getProducts() {
+            const stored = localStorage.getItem(STORAGE_KEY);
+            return stored ? JSON.parse(stored) : [];
+        }
+
+        function saveProducts(products) {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
+        }
+
+        function loadProducts() {
+            // Just initialize storage if needed
+            const products = getProducts();
+            console.log('Loaded products:', products.length);
+        }
+
+        function saveProduct() {
+            const name = document.getElementById('productName').value.trim();
+            const price = document.getElementById('productPrice').value;
+            const info = document.getElementById('productInfo').value.trim();
+            const reviewText = document.getElementById('reviewText').value.trim();
+            const rating = parseInt(document.getElementById('ratingSlider').value);
+
+            if (!name || !price || !reviewText) {
+                alert('Bitte fülle alle Pflichtfelder aus!');
+                return;
+            }
+
+            const products = getProducts();
+            const newProduct = {
+                barcode: currentBarcode,
+                barcodeImage: currentBarcodeImage,
+                name: name,
+                price: parseFloat(price),
+                info: info,
+                reviews: [{
+                    text: reviewText,
+                    rating: rating,
+                    date: new Date().toISOString()
+                }],
+                createdAt: new Date().toISOString()
+            };
+
+            products.push(newProduct);
+            saveProducts(products);
+
+            displayProduct(newProduct);
+        }
+
+        function displayProduct(product) {
+            document.getElementById('uploadSection').style.display = 'none';
+            document.getElementById('productDisplay').style.display = 'block';
+
+            document.getElementById('displayProductName').textContent = product.name;
+            document.getElementById('displayPrice').textContent = product.price.toFixed(2) + ' €';
+            document.getElementById('displayInfo').textContent = product.info || 'Keine zusätzlichen Informationen';
+
+            const avgRating = calculateAverageRating(product.reviews);
+            document.getElementById('displayAvgRating').textContent = avgRating + '%';
+            document.getElementById('displayReviewCount').textContent = product.reviews.length;
+
+            displayReviews(product.reviews);
+        }
+
+        function calculateAverageRating(reviews) {
+            if (reviews.length === 0) return 0;
+            const sum = reviews.reduce((acc, review) => acc + review.rating, 0);
+            return Math.round(sum / reviews.length);
+        }
+
+        function displayReviews(reviews) {
+            const reviewsList = document.getElementById('reviewsList');
+            reviewsList.innerHTML = '';
+
+            reviews.forEach(review => {
+                const reviewDiv = document.createElement('div');
+                reviewDiv.className = 'review';
+                
+                const date = new Date(review.date);
+                const formattedDate = date.toLocaleDateString('de-DE', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+
+                reviewDiv.innerHTML = `
+                    <div class="review-header">
+                        <span class="review-rating">${review.rating}%</span>
+                        <span class="review-date">${formattedDate}</span>
+                    </div>
+                    <div class="review-text">${review.text}</div>
+                `;
+                reviewsList.appendChild(reviewDiv);
+            });
+        }
+
+        function toggleNewReviewForm() {
+            const form = document.getElementById('newReviewForm');
+            form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        }
+
+        function cancelNewReview() {
+            document.getElementById('newReviewForm').style.display = 'none';
+            document.getElementById('newReviewText').value = '';
+            document.getElementById('newRatingSlider').value = 75;
+            document.getElementById('newRatingValue').textContent = '75%';
+        }
+
+        function addNewReview() {
+            const reviewText = document.getElementById('newReviewText').value.trim();
+            const rating = parseInt(document.getElementById('newRatingSlider').value);
+
+            if (!reviewText) {
+                alert('Bitte schreibe eine Bewertung!');
+                return;
+            }
+
+            const products = getProducts();
+            const productIndex = products.findIndex(p => p.barcode === currentBarcode);
+
+            if (productIndex !== -1) {
+                products[productIndex].reviews.push({
+                    text: reviewText,
+                    rating: rating,
+                    date: new Date().toISOString()
+                });
+
+                saveProducts(products);
+                displayProduct(products[productIndex]);
+                cancelNewReview();
+            }
+        }
+
+        function resetUpload() {
+            document.getElementById('previewSection').style.display = 'none';
+            document.getElementById('productForm').style.display = 'none';
+            document.getElementById('fileInput').value = '';
+            currentBarcode = null;
+            currentBarcodeImage = null;
+        }
+
+        function cancelUpload() {
+            resetUpload();
+        }
+
+        function backToUpload() {
+            document.getElementById('productDisplay').style.display = 'none';
+            document.getElementById('uploadSection').style.display = 'block';
+            resetUpload();
+            cancelNewReview();
+        }
+    </script>
+</body>
+</html>
