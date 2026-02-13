@@ -1,1596 +1,887 @@
 <!DOCTYPE html>
-<html lang="de">
+<html lang="de" data-theme="dark">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ProduktForum - Community Produktbewertungen</title>
+    <title>ProduktForum</title>
     <script src="https://cdn.jsdelivr.net/npm/@ericblade/quagga2/dist/quagga.min.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Inter:wght@300;400;600&display=swap');
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        :root {
-            --black: #050505;
-            --white: #f5f5f0;
-            --green: #00ff88;
-            --red: #ff2244;
-            --gray: #1c1c1c;
-            --mid: #333;
-            --muted: #888;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--black);
-            color: var(--white);
-            min-height: 100vh;
-        }
-
-        /* Header */
-        header {
-            background: var(--black);
-            border-bottom: 1px solid #222;
-            padding: 18px 0;
-            position: sticky;
-            top: 0;
-            z-index: 1000;
-        }
-
-        .header-content {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 0 24px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .logo {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 2em;
-            letter-spacing: 4px;
-            color: var(--white);
-        }
-
-        .logo span { color: var(--green); }
-
-        .header-actions { display: flex; gap: 12px; align-items: center; }
-
-        .admin-badge {
-            background: var(--red);
-            color: var(--white);
-            padding: 4px 14px;
-            font-family: 'Space Mono', monospace;
-            font-size: 0.75em;
-            letter-spacing: 2px;
-            display: none;
-        }
-        .admin-badge.active { display: block; }
-
-        .btn {
-            padding: 10px 22px;
-            border: 1px solid var(--white);
-            background: transparent;
-            color: var(--white);
-            font-family: 'Space Mono', monospace;
-            font-size: 0.8em;
-            letter-spacing: 1px;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-transform: uppercase;
-        }
-
-        .btn:hover { background: var(--white); color: var(--black); }
-        .btn-green { border-color: var(--green); color: var(--green); }
-        .btn-green:hover { background: var(--green); color: var(--black); }
-        .btn-red { border-color: var(--red); color: var(--red); }
-        .btn-red:hover { background: var(--red); color: var(--white); }
-        .btn-solid { background: var(--white); color: var(--black); }
-        .btn-solid:hover { background: transparent; color: var(--white); }
-
-        /* Container */
-        .container { max-width: 1400px; margin: 0 auto; padding: 32px 24px; }
-
-        /* Upload Section */
-        .upload-section {
-            background: var(--gray);
-            border: 1px solid #2a2a2a;
-            padding: 40px;
-            margin-bottom: 36px;
-            display: none;
-        }
-
-        .section-title {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.6em;
-            letter-spacing: 3px;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #2a2a2a;
-            padding-bottom: 12px;
-            color: var(--white);
-        }
-
-        .upload-area {
-            border: 2px dashed #333;
-            padding: 60px 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.25s;
-            background: var(--black);
-        }
-
-        .upload-area:hover, .upload-area.dragover {
-            border-color: var(--green);
-            box-shadow: 0 0 40px rgba(0,255,136,0.06);
-        }
-
-        .upload-icon { font-size: 3.5em; margin-bottom: 14px; }
-        .upload-text {
-            font-family: 'Space Mono', monospace;
-            font-size: 1em;
-            letter-spacing: 1px;
-            margin-bottom: 8px;
-        }
-        .upload-subtext { color: var(--muted); font-size: 0.9em; }
-        input[type="file"] { display: none; }
-
-        /* Scanner */
-        .scanner-container {
-            display: none;
-            background: var(--gray);
-            border: 1px solid #2a2a2a;
-            padding: 40px;
-            margin-bottom: 36px;
-        }
-
-        .scanner-status { text-align: center; margin-top: 20px; font-family: 'Space Mono', monospace; }
-
-        .barcode-result {
-            background: var(--black);
-            border: 1px solid var(--green);
-            padding: 20px;
-            margin-top: 20px;
-            text-align: center;
-        }
-
-        .barcode-number {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.8em;
-            color: var(--green);
-            letter-spacing: 4px;
-        }
-
-        /* Product Lookup Status */
-        .lookup-status {
-            background: var(--black);
-            border: 1px solid #2a2a2a;
-            padding: 24px;
-            margin-top: 20px;
-            display: none;
-        }
-
-        .lookup-step {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 8px 0;
-            font-family: 'Space Mono', monospace;
-            font-size: 0.85em;
-            color: var(--muted);
-            transition: color 0.3s;
-        }
-
-        .lookup-step.active { color: var(--white); }
-        .lookup-step.done { color: var(--green); }
-        .lookup-step.error { color: var(--red); }
-
-        .step-icon { font-size: 1.1em; min-width: 22px; }
-
-        /* Form Section */
-        .form-section {
-            display: none;
-            background: var(--gray);
-            border: 1px solid #2a2a2a;
-            padding: 40px;
-            margin-bottom: 36px;
-        }
-
-        .auto-filled-badge {
-            display: inline-block;
-            background: rgba(0,255,136,0.12);
-            border: 1px solid var(--green);
-            color: var(--green);
-            font-family: 'Space Mono', monospace;
-            font-size: 0.72em;
-            padding: 2px 10px;
-            margin-left: 10px;
-            letter-spacing: 1px;
-            vertical-align: middle;
-        }
-
-        .barcode-info {
-            background: var(--black);
-            border: 1px solid var(--green);
-            padding: 14px 20px;
-            margin-bottom: 24px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .barcode-label { color: var(--muted); font-size: 0.8em; font-family: 'Space Mono', monospace; }
-        .barcode-code { font-family: 'Space Mono', monospace; font-size: 1.1em; color: var(--green); letter-spacing: 2px; }
-
-        .product-found-banner {
-            background: rgba(0,255,136,0.08);
-            border: 1px solid var(--green);
-            padding: 16px 20px;
-            margin-bottom: 24px;
-            display: none;
-        }
-
-        .product-found-banner h4 {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.85em;
-            color: var(--green);
-            letter-spacing: 1px;
-            margin-bottom: 4px;
-        }
-
-        .product-found-banner p {
-            font-size: 0.85em;
-            color: var(--muted);
-        }
-
-        .barcode-preview-box {
-            text-align: center;
-            margin-bottom: 24px;
-            padding: 20px;
-            background: var(--black);
-            border: 1px solid #222;
-        }
-
-        .barcode-preview-box img {
-            max-width: 100%;
-            max-height: 280px;
-        }
-
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-            margin-bottom: 20px;
-        }
-
-        .form-group { margin-bottom: 22px; }
-        .form-group.full-width { grid-column: 1 / -1; }
-
-        label {
-            display: block;
-            font-family: 'Space Mono', monospace;
-            font-size: 0.78em;
-            letter-spacing: 1.5px;
-            color: var(--muted);
-            margin-bottom: 8px;
-            text-transform: uppercase;
-        }
-
-        input[type="text"],
-        input[type="number"],
-        textarea {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #2a2a2a;
-            background: var(--black);
-            color: var(--white);
-            font-size: 0.95em;
-            font-family: 'Inter', sans-serif;
-            transition: border-color 0.2s;
-        }
-
-        input[type="text"]:focus,
-        input[type="number"]:focus,
-        textarea:focus {
-            outline: none;
-            border-color: var(--green);
-        }
-
-        input.auto-filled {
-            border-color: rgba(0,255,136,0.4);
-            color: #ccc;
-        }
-
-        textarea { resize: vertical; min-height: 100px; }
-
-        .rating-input { display: flex; align-items: center; gap: 16px; }
-
-        input[type="range"] {
-            flex: 1;
-            height: 4px;
-            background: #2a2a2a;
-            outline: none;
-            border: none;
-            -webkit-appearance: none;
-            cursor: pointer;
-        }
-
-        input[type="range"]::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            width: 20px;
-            height: 20px;
-            background: var(--white);
-            cursor: pointer;
-            border-radius: 50%;
-        }
-
-        .rating-value {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.6em;
-            font-weight: 700;
-            min-width: 70px;
-            text-align: right;
-        }
-
-        .button-group { display: flex; gap: 12px; margin-top: 28px; }
-        .button-group .btn { flex: 1; }
-
-        /* Products Grid */
-        .page-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 28px;
-        }
-
-        .products-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 24px;
-        }
-
-        .product-card {
-            background: var(--gray);
-            border: 1px solid #222;
-            cursor: pointer;
-            transition: all 0.25s;
-            position: relative;
-        }
-
-        .product-card:hover {
-            border-color: #444;
-            transform: translateY(-3px);
-            box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-        }
-
-        .product-image {
-            width: 100%;
-            height: 180px;
-            background: var(--black);
-            border-bottom: 1px solid #222;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            overflow: hidden;
-        }
-
-        .product-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
-
-        .product-image.has-product-img img { object-fit: cover; }
-
-        .product-barcode-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0,0,0,0.8);
-            border: 1px solid var(--green);
-            padding: 3px 8px;
-            font-size: 0.7em;
-            font-family: 'Space Mono', monospace;
-            color: var(--green);
-            letter-spacing: 1px;
-        }
-
-        .api-badge {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(0,255,136,0.15);
-            border: 1px solid var(--green);
-            padding: 2px 8px;
-            font-size: 0.65em;
-            font-family: 'Space Mono', monospace;
-            color: var(--green);
-            letter-spacing: 1px;
-        }
-
-        .product-content { padding: 18px; }
-
-        .product-name {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 1.4em;
-            letter-spacing: 2px;
-            margin-bottom: 6px;
-        }
-
-        .product-brand {
-            font-size: 0.8em;
-            color: var(--muted);
-            margin-bottom: 12px;
-            font-family: 'Space Mono', monospace;
-        }
-
-        .product-meta {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #2a2a2a;
-        }
-
-        .product-price { font-family: 'Space Mono', monospace; font-size: 1.1em; }
-        .product-rating {
-            font-family: 'Space Mono', monospace;
-            font-size: 1.1em;
-            color: var(--green);
-        }
-
-        .product-info { color: var(--muted); font-size: 0.85em; margin-bottom: 14px; line-height: 1.55; }
-
-        .product-stats {
-            display: flex;
-            justify-content: space-between;
-            color: #555;
-            font-size: 0.78em;
-            font-family: 'Space Mono', monospace;
-        }
-
-        .admin-controls {
-            display: none;
-            padding: 12px 18px;
-            background: rgba(255,34,68,0.06);
-            border-top: 1px solid rgba(255,34,68,0.2);
-            gap: 8px;
-        }
-
-        .admin-controls.visible { display: flex; }
-        .admin-controls .btn { flex: 1; padding: 6px 12px; font-size: 0.75em; }
-
-        /* Modal */
-        .modal {
-            display: none;
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: rgba(0,0,0,0.94);
-            z-index: 2000;
-            overflow-y: auto;
-            padding: 20px;
-        }
-
-        .modal.active { display: flex; align-items: flex-start; justify-content: center; padding-top: 40px; }
-
-        .modal-content {
-            background: var(--gray);
-            border: 1px solid #2a2a2a;
-            max-width: 860px;
-            width: 100%;
-            margin-bottom: 40px;
-        }
-
-        .modal-header {
-            padding: 28px 32px;
-            border-bottom: 1px solid #2a2a2a;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
-        }
-
-        .modal-title-block h2 {
-            font-family: 'Bebas Neue', sans-serif;
-            font-size: 2em;
-            letter-spacing: 3px;
-        }
-
-        .modal-brand { font-size: 0.85em; color: var(--muted); font-family: 'Space Mono', monospace; margin-top: 4px; }
-
-        .close-btn {
-            background: none;
-            border: none;
-            color: var(--white);
-            font-size: 1.8em;
-            cursor: pointer;
-            padding: 0;
-            line-height: 1;
-            transition: color 0.2s;
-        }
-
-        .close-btn:hover { color: var(--red); }
-
-        .modal-body { padding: 32px; }
-
-        .product-detail-image {
-            width: 100%;
-            max-height: 260px;
-            background: var(--black);
-            border: 1px solid #222;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 28px;
-            padding: 20px;
-        }
-
-        .product-detail-image img { max-width: 100%; max-height: 100%; object-fit: contain; }
-
-        .detail-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 16px;
-            margin-bottom: 24px;
-        }
-
-        .detail-item {
-            background: var(--black);
-            border: 1px solid #222;
-            padding: 16px;
-            text-align: center;
-        }
-
-        .detail-label { font-size: 0.75em; color: var(--muted); margin-bottom: 6px; font-family: 'Space Mono', monospace; text-transform: uppercase; letter-spacing: 1px; }
-        .detail-value { font-family: 'Space Mono', monospace; font-size: 1.4em; font-weight: 700; }
-
-        .product-api-data {
-            background: var(--black);
-            border: 1px solid #1e1e1e;
-            padding: 20px;
-            margin-bottom: 24px;
-        }
-
-        .api-data-title {
-            font-family: 'Space Mono', monospace;
-            font-size: 0.75em;
-            color: var(--green);
-            letter-spacing: 2px;
-            margin-bottom: 14px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .api-tags { display: flex; flex-wrap: wrap; gap: 8px; }
-
-        .api-tag {
-            background: #1a1a1a;
-            border: 1px solid #2a2a2a;
-            padding: 4px 12px;
-            font-size: 0.78em;
-            color: var(--muted);
-            font-family: 'Space Mono', monospace;
-        }
-
-        .reviews-section { margin-top: 28px; }
-
-        .review {
-            background: var(--black);
-            border: 1px solid #1e1e1e;
-            padding: 18px;
-            margin-bottom: 16px;
-        }
-
-        .review-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid #1e1e1e;
-        }
-
-        .review-rating { font-family: 'Space Mono', monospace; font-size: 1.2em; color: var(--green); }
-        .review-date { color: #444; font-size: 0.8em; font-family: 'Space Mono', monospace; }
-        .review-text { font-size: 0.9em; line-height: 1.65; color: #aaa; }
-
-        .review-admin-controls { display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #1e1e1e; gap: 8px; }
-        .review-admin-controls.visible { display: flex; }
-        .review-admin-controls .btn { padding: 6px 14px; font-size: 0.78em; }
-
-        .add-review-section {
-            background: var(--black);
-            border: 1px solid #2a2a2a;
-            padding: 24px;
-            margin-top: 16px;
-            display: none;
-        }
-        .add-review-section.active { display: block; }
-
-        /* Edit Form */
-        .edit-form { display: none; margin-bottom: 28px; }
-        .edit-form.active { display: block; }
-        .edit-form .section-title { font-size: 1.2em; }
-
-        /* Empty State */
-        .empty-state { text-align: center; padding: 100px 20px; color: #444; }
-        .empty-state-icon { font-size: 4em; margin-bottom: 20px; }
-        .empty-state-text { font-family: 'Bebas Neue', sans-serif; font-size: 2em; letter-spacing: 4px; margin-bottom: 10px; }
-        .empty-state-sub { font-size: 0.85em; color: #333; font-family: 'Space Mono', monospace; }
-
-        /* Admin Login */
-        .admin-login { position: fixed; bottom: 24px; right: 24px; z-index: 1500; }
-
-        .admin-login-btn {
-            padding: 10px 18px;
-            border: 1px solid #333;
-            color: #444;
-            background: var(--black);
-            font-family: 'Space Mono', monospace;
-            font-size: 0.75em;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .admin-login-btn:hover { border-color: var(--white); color: var(--white); }
-
-        .admin-panel {
-            display: none;
-            position: fixed;
-            bottom: 70px;
-            right: 24px;
-            background: var(--gray);
-            border: 1px solid #2a2a2a;
-            padding: 20px;
-            z-index: 1500;
-            min-width: 280px;
-        }
-        .admin-panel.active { display: block; }
-        .admin-panel h3 { font-family: 'Space Mono', monospace; font-size: 0.85em; letter-spacing: 2px; margin-bottom: 14px; }
-        .admin-panel input { width: 100%; margin-bottom: 14px; }
-
-        /* Loading */
-        .loading {
-            display: inline-block;
-            width: 16px; height: 16px;
-            border: 2px solid #333;
-            border-top: 2px solid var(--green);
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-            vertical-align: middle;
-            margin-right: 8px;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        /* Barcode modal info */
-        .barcode-info-row {
-            background: var(--black);
-            border: 1px solid var(--green);
-            padding: 12px 18px;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        @media (max-width: 768px) {
-            .products-grid { grid-template-columns: 1fr; }
-            .form-grid { grid-template-columns: 1fr; }
-            .detail-grid { grid-template-columns: 1fr; }
-            .header-content { flex-direction: column; gap: 14px; }
+        @import url('https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Bebas+Neue&family=Inter:wght@300;400;500;600&display=swap');
+
+        [data-theme="dark"] {
+            --bg:#050505; --bg2:#111; --card:#1a1a1a; --border:#252525; --border2:#333;
+            --text:#f0f0eb; --muted:#777; --muted2:#444; --green:#00ff88; --red:#ff2244;
+            --overlay:rgba(0,0,0,0.92); --shadow:0 16px 48px rgba(0,0,0,0.7); --input-bg:#0a0a0a;
+        }
+        [data-theme="light"] {
+            --bg:#f2f1ed; --bg2:#e8e7e3; --card:#ffffff; --border:#ddd; --border2:#ccc;
+            --text:#111111; --muted:#777; --muted2:#bbb; --green:#00994d; --red:#cc0022;
+            --overlay:rgba(0,0,0,0.7); --shadow:0 16px 48px rgba(0,0,0,0.15); --input-bg:#f9f9f7;
+        }
+
+        *{margin:0;padding:0;box-sizing:border-box;}
+        body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .25s,color .25s;}
+
+        /* HEADER */
+        header{background:var(--bg);border-bottom:1px solid var(--border);padding:16px 0;position:sticky;top:0;z-index:900;}
+        .header-content{max-width:1400px;margin:0 auto;padding:0 24px;display:flex;justify-content:space-between;align-items:center;}
+        .logo{font-family:'Bebas Neue',sans-serif;font-size:2em;letter-spacing:4px;}
+        .logo span{color:var(--green);}
+        .header-right{display:flex;gap:10px;align-items:center;}
+        .user-chip{display:none;align-items:center;gap:8px;padding:6px 14px;border:1px solid var(--border2);background:var(--card);font-family:'Space Mono',monospace;font-size:.75em;cursor:pointer;transition:all .2s;}
+        .user-chip.active{display:flex;}
+        .user-chip:hover{border-color:var(--text);}
+        .user-avatar{width:24px;height:24px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.9em;font-weight:700;}
+        .admin-badge{background:var(--red);color:#fff;padding:4px 12px;font-family:'Space Mono',monospace;font-size:.72em;letter-spacing:2px;display:none;}
+        .admin-badge.active{display:block;}
+
+        /* BUTTONS */
+        .btn{padding:9px 20px;border:1px solid var(--text);background:transparent;color:var(--text);font-family:'Space Mono',monospace;font-size:.78em;letter-spacing:1px;cursor:pointer;transition:all .2s;text-transform:uppercase;white-space:nowrap;}
+        .btn:hover{background:var(--text);color:var(--bg);}
+        .btn-green{border-color:var(--green);color:var(--green);}
+        .btn-green:hover{background:var(--green);color:var(--bg);}
+        .btn-red{border-color:var(--red);color:var(--red);}
+        .btn-red:hover{background:var(--red);color:#fff;}
+        .btn-solid{background:var(--text);color:var(--bg);}
+        .btn-solid:hover{background:transparent;color:var(--text);}
+        .btn-sm{padding:5px 12px;font-size:.72em;}
+
+        /* SETTINGS OVERLAY */
+        .settings-overlay{display:none;position:fixed;inset:0;background:var(--overlay);z-index:3000;align-items:flex-start;justify-content:flex-end;padding:20px;}
+        .settings-overlay.active{display:flex;}
+        .settings-panel{background:var(--card);border:1px solid var(--border2);width:380px;max-height:90vh;overflow-y:auto;box-shadow:var(--shadow);margin-top:60px;}
+        .settings-header{padding:22px 24px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+        .settings-header h2{font-family:'Bebas Neue',sans-serif;font-size:1.5em;letter-spacing:3px;}
+        .settings-section{padding:20px 24px;border-bottom:1px solid var(--border);}
+        .settings-section-title{font-family:'Space Mono',monospace;font-size:.7em;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:14px;}
+        .toggle-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+        .toggle-label{font-size:.9em;}
+        .toggle{position:relative;width:44px;height:24px;background:var(--border2);border-radius:12px;cursor:pointer;transition:background .2s;}
+        .toggle.on{background:var(--green);}
+        .toggle::after{content:'';position:absolute;width:18px;height:18px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s;}
+        .toggle.on::after{left:23px;}
+        .account-loggedin{display:none;}
+        .account-loggedin.active{display:block;}
+        .account-loggedout.hidden{display:none;}
+        .account-info-box{background:var(--bg2);border:1px solid var(--border);padding:14px;margin-bottom:14px;}
+        .account-username{font-family:'Bebas Neue',sans-serif;font-size:1.3em;letter-spacing:2px;margin-bottom:4px;}
+        .account-stats{font-size:.8em;color:var(--muted);font-family:'Space Mono',monospace;}
+        .admin-loggedin{display:none;align-items:center;gap:10px;}
+        .admin-loggedin.active{display:flex;}
+        .admin-status-dot{width:8px;height:8px;border-radius:50%;background:var(--red);animation:pulse 1.5s ease-in-out infinite;}
+        @keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+
+        /* MAIN */
+        .container{max-width:1400px;margin:0 auto;padding:28px 24px;}
+
+        /* UPLOAD/SCANNER/FORM */
+        .upload-section{background:var(--card);border:1px solid var(--border2);padding:36px;margin-bottom:32px;display:none;}
+        .section-title{font-family:'Bebas Neue',sans-serif;font-size:1.5em;letter-spacing:3px;margin-bottom:18px;border-bottom:1px solid var(--border);padding-bottom:10px;}
+        .upload-area{border:2px dashed var(--border2);padding:56px 20px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg);}
+        .upload-area:hover,.upload-area.dragover{border-color:var(--green);box-shadow:0 0 30px rgba(0,200,100,.07);}
+        .upload-icon{font-size:3em;margin-bottom:12px;}
+        .upload-text{font-family:'Space Mono',monospace;font-size:.95em;letter-spacing:1px;margin-bottom:6px;}
+        .upload-subtext{color:var(--muted);font-size:.85em;}
+        input[type="file"]{display:none;}
+        .scanner-container{display:none;background:var(--card);border:1px solid var(--border2);padding:36px;margin-bottom:32px;}
+        .scanner-status{text-align:center;margin-top:18px;font-family:'Space Mono',monospace;font-size:.85em;}
+        .barcode-result{background:var(--bg);border:1px solid var(--green);padding:18px;margin-top:18px;text-align:center;}
+        .barcode-number{font-family:'Space Mono',monospace;font-size:1.6em;color:var(--green);letter-spacing:4px;}
+        .lookup-status{background:var(--bg);border:1px solid var(--border);padding:20px;margin-top:18px;display:none;}
+        .lookup-step{display:flex;align-items:center;gap:10px;padding:7px 0;font-family:'Space Mono',monospace;font-size:.82em;color:var(--muted);transition:color .3s;}
+        .lookup-step.active{color:var(--text);}
+        .lookup-step.done{color:var(--green);}
+        .lookup-step.error{color:var(--red);}
+        .step-icon{min-width:20px;}
+        .form-section{display:none;background:var(--card);border:1px solid var(--border2);padding:36px;margin-bottom:32px;}
+        .barcode-info{background:var(--bg);border:1px solid var(--green);padding:12px 18px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;}
+        .barcode-label{color:var(--muted);font-size:.78em;font-family:'Space Mono',monospace;}
+        .barcode-code{font-family:'Space Mono',monospace;font-size:1.05em;color:var(--green);letter-spacing:2px;}
+        .product-found-banner{background:rgba(0,200,100,.06);border:1px solid var(--green);padding:14px 18px;margin-bottom:20px;display:none;}
+        .product-found-banner h4{font-family:'Space Mono',monospace;font-size:.82em;color:var(--green);letter-spacing:1px;margin-bottom:3px;}
+        .product-found-banner p{font-size:.82em;color:var(--muted);}
+        .barcode-preview-box{text-align:center;margin-bottom:20px;padding:18px;background:var(--bg);border:1px solid var(--border);}
+        .barcode-preview-box img{max-width:100%;max-height:240px;width:auto;height:auto;object-fit:contain;display:block;margin:0 auto;}
+        .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
+        .form-group{margin-bottom:20px;}
+        .form-group.full-width{grid-column:1/-1;}
+        label{display:block;font-family:'Space Mono',monospace;font-size:.75em;letter-spacing:1.5px;color:var(--muted);margin-bottom:7px;text-transform:uppercase;}
+        input[type="text"],input[type="number"],input[type="password"],textarea{width:100%;padding:11px 14px;border:1px solid var(--border2);background:var(--input-bg);color:var(--text);font-size:.92em;font-family:'Inter',sans-serif;transition:border-color .2s;}
+        input:focus,textarea:focus{outline:none;border-color:var(--green);}
+        input.auto-filled{border-color:rgba(0,200,100,.4);}
+        textarea{resize:vertical;min-height:96px;}
+        .rating-input{display:flex;align-items:center;gap:14px;}
+        input[type="range"]{flex:1;height:4px;background:var(--border2);outline:none;border:none;-webkit-appearance:none;cursor:pointer;}
+        input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;background:var(--text);cursor:pointer;border-radius:50%;}
+        .rating-value{font-family:'Space Mono',monospace;font-size:1.5em;font-weight:700;min-width:64px;text-align:right;}
+        .button-group{display:flex;gap:10px;margin-top:24px;}
+        .button-group .btn{flex:1;}
+
+        /* LOGIN REQUIRED */
+        .login-required-banner{background:var(--bg2);border:1px solid var(--border2);padding:16px 20px;text-align:center;margin-top:16px;font-size:.9em;color:var(--muted);}
+        .login-required-banner button{margin-top:10px;}
+
+        /* PRODUCTS */
+        .products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:22px;}
+        .product-card{background:var(--card);border:1px solid var(--border);cursor:pointer;transition:all .22s;position:relative;}
+        .product-card:hover{border-color:var(--border2);transform:translateY(-3px);box-shadow:var(--shadow);}
+        .product-image{width:100%;height:175px;background:var(--bg2);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+        .product-image img{width:100%;height:100%;object-fit:contain;padding:8px;}
+        .product-barcode-badge{position:absolute;top:9px;right:9px;background:rgba(0,0,0,.7);border:1px solid var(--green);padding:2px 7px;font-size:.68em;font-family:'Space Mono',monospace;color:var(--green);}
+        .api-badge{position:absolute;top:9px;left:9px;background:rgba(0,200,100,.12);border:1px solid var(--green);padding:2px 7px;font-size:.65em;font-family:'Space Mono',monospace;color:var(--green);}
+        .product-content{padding:16px;}
+        .product-name{font-family:'Bebas Neue',sans-serif;font-size:1.35em;letter-spacing:2px;margin-bottom:5px;}
+        .product-brand{font-size:.78em;color:var(--muted);margin-bottom:10px;font-family:'Space Mono',monospace;}
+        .product-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+        .product-price{font-family:'Space Mono',monospace;font-size:1.05em;}
+        .product-rating{font-family:'Space Mono',monospace;font-size:1.05em;color:var(--green);}
+        .product-info{color:var(--muted);font-size:.83em;margin-bottom:12px;line-height:1.5;}
+        .product-stats{display:flex;justify-content:space-between;color:var(--muted2);font-size:.76em;font-family:'Space Mono',monospace;}
+        .admin-controls{display:none;padding:10px 16px;background:rgba(200,0,0,.05);border-top:1px solid rgba(200,0,0,.15);gap:7px;}
+        .admin-controls.visible{display:flex;}
+        .admin-controls .btn{flex:1;padding:5px 10px;font-size:.72em;}
+
+        /* EMPTY STATE */
+        .empty-state{text-align:center;padding:90px 20px;color:var(--muted2);}
+        .empty-state-icon{font-size:3.8em;margin-bottom:18px;}
+        .empty-state-text{font-family:'Bebas Neue',sans-serif;font-size:1.9em;letter-spacing:4px;margin-bottom:8px;color:var(--muted);}
+        .empty-state-sub{font-size:.82em;font-family:'Space Mono',monospace;}
+
+        /* MODAL */
+        .modal{display:none;position:fixed;inset:0;background:var(--overlay);z-index:2000;overflow-y:auto;padding:20px;}
+        .modal.active{display:flex;align-items:flex-start;justify-content:center;padding-top:36px;}
+        .modal-content{background:var(--card);border:1px solid var(--border2);max-width:860px;width:100%;margin-bottom:36px;}
+        .modal-header{padding:24px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:flex-start;}
+        .modal-title-block h2{font-family:'Bebas Neue',sans-serif;font-size:1.9em;letter-spacing:3px;}
+        .modal-brand{font-size:.82em;color:var(--muted);font-family:'Space Mono',monospace;margin-top:3px;}
+        .close-btn{background:none;border:none;color:var(--text);font-size:1.7em;cursor:pointer;padding:0;line-height:1;transition:color .2s;}
+        .close-btn:hover{color:var(--red);}
+        .modal-body{padding:28px;}
+        .barcode-info-row{background:var(--bg);border:1px solid var(--green);padding:11px 16px;margin-bottom:18px;display:flex;align-items:center;justify-content:space-between;}
+        .product-detail-image{width:100%;height:260px;background:var(--bg2);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;margin-bottom:24px;padding:14px;overflow:hidden;}
+        .product-detail-image img{max-width:100%;max-height:232px;width:auto;height:auto;object-fit:contain;display:block;}
+        .detail-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:20px;}
+        .detail-item{background:var(--bg2);border:1px solid var(--border);padding:14px;text-align:center;}
+        .detail-label{font-size:.72em;color:var(--muted);margin-bottom:5px;font-family:'Space Mono',monospace;text-transform:uppercase;letter-spacing:1px;}
+        .detail-value{font-family:'Space Mono',monospace;font-size:1.35em;font-weight:700;}
+        .product-api-data{background:var(--bg2);border:1px solid var(--border);padding:18px;margin-bottom:20px;}
+        .api-data-title{font-family:'Space Mono',monospace;font-size:.72em;color:var(--green);letter-spacing:2px;margin-bottom:12px;}
+        .api-tags{display:flex;flex-wrap:wrap;gap:7px;}
+        .api-tag{background:var(--bg);border:1px solid var(--border);padding:3px 10px;font-size:.76em;color:var(--muted);font-family:'Space Mono',monospace;}
+
+        /* REVIEWS */
+        .reviews-section{margin-top:24px;}
+        .review{background:var(--bg2);border:1px solid var(--border);padding:16px;margin-bottom:14px;}
+        .review-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+        .review-header-left{display:flex;align-items:center;gap:10px;}
+        .review-author-chip{display:flex;align-items:center;gap:6px;font-family:'Space Mono',monospace;font-size:.78em;}
+        .review-avatar{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75em;font-weight:700;}
+        .review-rating{font-family:'Space Mono',monospace;font-size:1.1em;color:var(--green);}
+        .review-date{color:var(--muted2);font-size:.78em;font-family:'Space Mono',monospace;}
+        .review-text{font-size:.88em;line-height:1.62;color:var(--text);opacity:.82;margin-bottom:12px;}
+        .review-actions{display:flex;align-items:center;gap:8px;}
+        .like-btn,.dislike-btn{display:flex;align-items:center;gap:5px;background:none;border:1px solid var(--border2);color:var(--muted);font-family:'Space Mono',monospace;font-size:.75em;padding:4px 10px;cursor:pointer;transition:all .18s;}
+        .like-btn:hover{border-color:var(--green);color:var(--green);}
+        .dislike-btn:hover{border-color:var(--red);color:var(--red);}
+        .like-btn.active{border-color:var(--green);color:var(--green);background:rgba(0,200,100,.08);}
+        .dislike-btn.active{border-color:var(--red);color:var(--red);background:rgba(200,0,0,.08);}
+        .review-admin-controls{display:none;margin-left:auto;}
+        .review-admin-controls.visible{display:flex;gap:6px;}
+        .add-review-section{background:var(--bg2);border:1px solid var(--border2);padding:20px;margin-top:14px;display:none;}
+        .add-review-section.active{display:block;}
+        .edit-form{display:none;margin-bottom:24px;}
+        .edit-form.active{display:block;}
+
+        /* LOADING */
+        .loading{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top:2px solid var(--green);border-radius:50%;animation:spin .8s linear infinite;vertical-align:middle;margin-right:7px;}
+        @keyframes spin{to{transform:rotate(360deg);}}
+
+        /* TOAST */
+        .toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:var(--card);border:1px solid var(--border2);padding:12px 24px;font-family:'Space Mono',monospace;font-size:.82em;z-index:9999;transition:transform .3s;pointer-events:none;box-shadow:var(--shadow);}
+        .toast.show{transform:translateX(-50%) translateY(0);}
+
+        @media(max-width:768px){
+            .products-grid{grid-template-columns:1fr;}
+            .form-grid{grid-template-columns:1fr;}
+            .detail-grid{grid-template-columns:1fr;}
+            .header-content{flex-direction:column;gap:12px;}
+            .settings-panel{width:100%;margin-top:0;}
         }
     </style>
 </head>
 <body>
-    <header>
-        <div class="header-content">
-            <div class="logo">PRODUKT<span>FORUM</span></div>
-            <div class="header-actions">
-                <div class="admin-badge" id="adminBadge">ADMIN MODUS</div>
-                <button class="btn" onclick="showUploadSection()">+ NEUES PRODUKT</button>
+
+<header>
+    <div class="header-content">
+        <div class="logo">PRODUKT<span>FORUM</span></div>
+        <div class="header-right">
+            <div class="admin-badge" id="adminBadge">ADMIN</div>
+            <div class="user-chip" id="userChip" onclick="openSettings()">
+                <div class="user-avatar" id="headerAvatar"></div>
+                <span id="headerUsername"></span>
             </div>
-        </div>
-    </header>
-
-    <div class="container">
-        <!-- Upload Section -->
-        <div class="upload-section" id="uploadSection">
-            <h2 class="section-title">BARCODE SCANNEN</h2>
-            <div class="upload-area" id="uploadArea">
-                <div class="upload-icon">📷</div>
-                <div class="upload-text">Barcode-Bild hochladen</div>
-                <div class="upload-subtext">Produktdaten werden automatisch erkannt</div>
-                <input type="file" id="fileInput" accept="image/*">
-            </div>
-        </div>
-
-        <!-- Scanner Container -->
-        <div class="scanner-container" id="scannerContainer">
-            <h2 class="section-title">BARCODE WIRD ANALYSIERT</h2>
-            <div id="barcode-scanner"></div>
-            <div class="scanner-status" id="scannerStatus">
-                <div class="loading"></div> Bild wird gescannt...
-            </div>
-            <div id="barcodeResult"></div>
-
-            <!-- Step-by-step lookup status -->
-            <div class="lookup-status" id="lookupStatus">
-                <div class="lookup-step" id="step-scan">
-                    <span class="step-icon">⬜</span>
-                    <span>Barcode scannen</span>
-                </div>
-                <div class="lookup-step" id="step-lookup">
-                    <span class="step-icon">⬜</span>
-                    <span>Produktdaten abrufen (Open Food Facts)</span>
-                </div>
-                <div class="lookup-step" id="step-fill">
-                    <span class="step-icon">⬜</span>
-                    <span>Formular automatisch befüllen</span>
-                </div>
-            </div>
-
-            <div class="button-group" style="margin-top: 20px;">
-                <button class="btn" onclick="cancelScan()">Abbrechen</button>
-            </div>
-        </div>
-
-        <!-- Product Form -->
-        <div class="form-section" id="productForm">
-            <h2 class="section-title">PRODUKT HINZUFÜGEN</h2>
-
-            <div class="barcode-info" id="barcodeInfoBar">
-                <div>
-                    <div class="barcode-label">ERKANNTER BARCODE</div>
-                    <div class="barcode-code" id="detectedBarcode"></div>
-                </div>
-                <div id="barcodeSourceBadge"></div>
-            </div>
-
-            <div class="product-found-banner" id="productFoundBanner">
-                <h4>✓ PRODUKT AUTOMATISCH ERKANNT</h4>
-                <p id="productFoundText">Name und Beschreibung wurden automatisch ausgefüllt. Du kannst die Angaben anpassen.</p>
-            </div>
-
-            <div class="barcode-preview-box">
-                <img id="barcodePreview" alt="Barcode">
-            </div>
-
-            <div class="form-grid">
-                <div class="form-group">
-                    <label>Produktname *</label>
-                    <input type="text" id="productName" required placeholder="z.B. Milka Schokolade">
-                </div>
-
-                <div class="form-group">
-                    <label>Marke</label>
-                    <input type="text" id="productBrand" placeholder="z.B. Milka">
-                </div>
-
-                <div class="form-group">
-                    <label>Preis (€) *</label>
-                    <input type="number" id="productPrice" step="0.01" required placeholder="2.99">
-                </div>
-
-                <div class="form-group">
-                    <label>Kategorie</label>
-                    <input type="text" id="productCategory" placeholder="z.B. Süßwaren">
-                </div>
-
-                <div class="form-group full-width">
-                    <label>Produktinformationen</label>
-                    <textarea id="productInfo" placeholder="Beschreibung, Inhaltsstoffe, Besonderheiten..."></textarea>
-                </div>
-
-                <div class="form-group full-width">
-                    <label>Deine Bewertung *</label>
-                    <textarea id="reviewText" required placeholder="Was hältst du von diesem Produkt?"></textarea>
-                </div>
-
-                <div class="form-group full-width">
-                    <label>Bewertung (in %)</label>
-                    <div class="rating-input">
-                        <input type="range" id="ratingSlider" min="0" max="100" value="75">
-                        <span class="rating-value" id="ratingValue">75%</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="button-group">
-                <button class="btn" onclick="cancelUpload()">Abbrechen</button>
-                <button class="btn btn-solid" onclick="saveProduct()">Produkt Speichern</button>
-            </div>
-        </div>
-
-        <!-- Products Header -->
-        <div class="page-header">
-            <div class="section-title" style="border: none; padding: 0; margin: 0;">ALLE PRODUKTE</div>
-        </div>
-
-        <div class="products-grid" id="productsGrid"></div>
-
-        <div class="empty-state" id="emptyState">
-            <div class="empty-state-icon">📦</div>
-            <div class="empty-state-text">Noch keine Produkte</div>
-            <div class="empty-state-sub">Scanne dein erstes Produkt!</div>
+            <button class="btn" onclick="showUploadSection()">+ PRODUKT</button>
+            <button class="btn" onclick="openSettings()" style="padding:9px 14px;font-size:1.1em;" title="Einstellungen">⚙</button>
         </div>
     </div>
+</header>
 
-    <!-- Product Detail Modal -->
-    <div class="modal" id="productModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <div class="modal-title-block">
-                    <h2 id="modalTitle"></h2>
-                    <div class="modal-brand" id="modalBrand"></div>
+<!-- SETTINGS OVERLAY -->
+<div class="settings-overlay" id="settingsOverlay" onclick="closeSettingsIfOutside(event)">
+    <div class="settings-panel">
+        <div class="settings-header">
+            <h2>EINSTELLUNGEN</h2>
+            <button class="close-btn" onclick="closeSettings()">×</button>
+        </div>
+        <div>
+            <!-- DARSTELLUNG -->
+            <div class="settings-section">
+                <div class="settings-section-title">DARSTELLUNG</div>
+                <div class="toggle-row">
+                    <span class="toggle-label">Hell-Modus</span>
+                    <div class="toggle" id="themeToggle" onclick="toggleTheme()"></div>
                 </div>
-                <button class="close-btn" onclick="closeModal()">×</button>
             </div>
-            <div class="modal-body">
-                <div class="barcode-info-row">
-                    <div>
-                        <div class="barcode-label">BARCODE</div>
-                        <div class="barcode-code" id="modalBarcode"></div>
-                    </div>
-                    <div id="modalApiSource" style="font-size: 0.75em; font-family: 'Space Mono', monospace; color: var(--green);"></div>
-                </div>
-
-                <div class="product-detail-image">
-                    <img id="modalBarcodeImage" alt="Produktbild">
-                </div>
-
-                <div class="detail-grid">
-                    <div class="detail-item">
-                        <div class="detail-label">Preis</div>
-                        <div class="detail-value" id="modalPrice"></div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Ø Bewertung</div>
-                        <div class="detail-value" id="modalRating" style="color: var(--green);"></div>
-                    </div>
-                    <div class="detail-item">
-                        <div class="detail-label">Bewertungen</div>
-                        <div class="detail-value" id="modalReviewCount"></div>
-                    </div>
-                </div>
-
-                <div class="form-group" style="margin-bottom: 20px;">
-                    <label>Kategorie</label>
-                    <div id="modalCategory" style="color: var(--muted); font-size: 0.9em;"></div>
-                </div>
-
-                <div id="modalApiDataSection" class="product-api-data" style="display:none;">
-                    <div class="api-data-title">◈ PRODUKTDATEN (OPEN FOOD FACTS)</div>
-                    <div class="api-tags" id="modalApiTags"></div>
-                </div>
-
-                <div class="form-group">
-                    <label>Produktinformationen</label>
-                    <div id="modalInfo" style="color: #aaa; line-height: 1.65; font-size: 0.9em;"></div>
-                </div>
-
-                <!-- Edit Form -->
-                <div class="edit-form" id="editForm">
-                    <h3 class="section-title">PRODUKT BEARBEITEN</h3>
-                    <div class="form-grid">
-                        <div class="form-group">
-                            <label>Produktname</label>
-                            <input type="text" id="editProductName">
-                        </div>
-                        <div class="form-group">
-                            <label>Marke</label>
-                            <input type="text" id="editProductBrand">
-                        </div>
-                        <div class="form-group">
-                            <label>Preis (€)</label>
-                            <input type="number" id="editProductPrice" step="0.01">
-                        </div>
-                        <div class="form-group">
-                            <label>Kategorie</label>
-                            <input type="text" id="editProductCategory">
-                        </div>
-                        <div class="form-group full-width">
-                            <label>Produktinformationen</label>
-                            <textarea id="editProductInfo"></textarea>
-                        </div>
-                    </div>
-                    <div class="button-group">
-                        <button class="btn" onclick="cancelEdit()">Abbrechen</button>
-                        <button class="btn btn-solid" onclick="saveEdit()">Speichern</button>
-                    </div>
-                </div>
-
-                <!-- Reviews -->
-                <div class="reviews-section">
-                    <h3 class="section-title" style="font-size: 1.2em;">BEWERTUNGEN</h3>
-                    <div id="modalReviews"></div>
-
-                    <button class="btn btn-green" style="width: 100%; margin-top: 16px;" onclick="toggleAddReview()">
-                        + BEWERTUNG HINZUFÜGEN
-                    </button>
-
-                    <div class="add-review-section" id="addReviewSection">
-                        <div class="form-group">
-                            <label>Deine Bewertung</label>
-                            <textarea id="newReviewText" placeholder="Teile deine Erfahrung..."></textarea>
-                        </div>
-                        <div class="form-group">
-                            <label>Bewertung (%)</label>
-                            <div class="rating-input">
-                                <input type="range" id="newRatingSlider" min="0" max="100" value="75">
-                                <span class="rating-value" id="newRatingValue">75%</span>
+            <!-- ACCOUNT -->
+            <div class="settings-section">
+                <div class="settings-section-title">ACCOUNT</div>
+                <div class="account-loggedin" id="accountLoggedIn">
+                    <div class="account-info-box">
+                        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px;">
+                            <div class="user-avatar" id="settingsAvatar" style="width:36px;height:36px;font-size:1.1em;"></div>
+                            <div>
+                                <div class="account-username" id="settingsUsername"></div>
+                                <div class="account-stats" id="settingsStats"></div>
                             </div>
                         </div>
-                        <div class="button-group">
-                            <button class="btn" onclick="cancelNewReview()">Abbrechen</button>
-                            <button class="btn btn-solid" onclick="submitNewReview()">Senden</button>
-                        </div>
                     </div>
+                    <button class="btn btn-red" style="width:100%;" onclick="logout()">ABMELDEN</button>
+                </div>
+                <div class="account-loggedout" id="accountLoggedOut">
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>BENUTZERNAME</label>
+                        <input type="text" id="regUsername" placeholder="z.B. MaxMustermann" maxlength="20">
+                    </div>
+                    <div class="form-group" style="margin-bottom:14px;">
+                        <label>PASSWORT</label>
+                        <input type="password" id="regPassword" placeholder="Mindestens 4 Zeichen">
+                    </div>
+                    <div style="display:flex;gap:8px;">
+                        <button class="btn btn-solid" style="flex:1;" onclick="loginUser()">ANMELDEN</button>
+                        <button class="btn btn-green" style="flex:1;" onclick="registerUser()">REGISTRIEREN</button>
+                    </div>
+                </div>
+            </div>
+            <!-- ADMIN -->
+            <div class="settings-section">
+                <div class="settings-section-title">ADMINISTRATION</div>
+                <div class="admin-loggedin" id="adminLoggedIn">
+                    <div class="admin-status-dot"></div>
+                    <span style="font-size:.85em;font-family:'Space Mono',monospace;">Admin-Modus aktiv</span>
+                    <button class="btn btn-sm btn-red" style="margin-left:auto;" onclick="adminLogout()">ABMELDEN</button>
+                </div>
+                <div id="adminLoggedOut">
+                    <div class="form-group" style="margin-bottom:12px;">
+                        <label>ADMIN-PASSWORT</label>
+                        <input type="password" id="adminPassword" placeholder="Passwort" onkeydown="if(event.key==='Enter')adminLogin()">
+                    </div>
+                    <button class="btn btn-solid" style="width:100%;" onclick="adminLogin()">ADMIN LOGIN</button>
                 </div>
             </div>
         </div>
     </div>
+</div>
 
-    <!-- Admin Login -->
-    <div class="admin-login">
-        <button class="admin-login-btn" onclick="toggleAdminPanel()">🔐 ADMIN</button>
+<div class="container">
+    <!-- Upload -->
+    <div class="upload-section" id="uploadSection">
+        <h2 class="section-title">BARCODE SCANNEN</h2>
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📷</div>
+            <div class="upload-text">Barcode-Bild hochladen</div>
+            <div class="upload-subtext">Produktdaten werden automatisch erkannt</div>
+            <input type="file" id="fileInput" accept="image/*">
+        </div>
     </div>
-
-    <div class="admin-panel" id="adminPanel">
-        <h3>ADMIN LOGIN</h3>
-        <input type="password" id="adminPassword" placeholder="Passwort" class="form-group" style="width:100%; margin-bottom: 14px; padding: 10px; border: 1px solid #333; background: var(--black); color: var(--white); font-family: 'Space Mono', monospace;">
+    <!-- Scanner -->
+    <div class="scanner-container" id="scannerContainer">
+        <h2 class="section-title">BARCODE WIRD ANALYSIERT</h2>
+        <div id="barcode-scanner"></div>
+        <div class="scanner-status" id="scannerStatus"><div class="loading"></div> Bild wird gescannt...</div>
+        <div id="barcodeResult"></div>
+        <div class="lookup-status" id="lookupStatus">
+            <div class="lookup-step" id="step-scan"><span class="step-icon">⬜</span><span>Barcode scannen</span></div>
+            <div class="lookup-step" id="step-lookup"><span class="step-icon">⬜</span><span>Produktdaten abrufen (Open Food Facts)</span></div>
+            <div class="lookup-step" id="step-fill"><span class="step-icon">⬜</span><span>Formular automatisch befüllen</span></div>
+        </div>
+        <div class="button-group" style="margin-top:18px;"><button class="btn" onclick="cancelScan()">Abbrechen</button></div>
+    </div>
+    <!-- Product Form -->
+    <div class="form-section" id="productForm">
+        <h2 class="section-title">PRODUKT HINZUFÜGEN</h2>
+        <div class="barcode-info">
+            <div><div class="barcode-label">ERKANNTER BARCODE</div><div class="barcode-code" id="detectedBarcode"></div></div>
+            <div id="barcodeSourceBadge"></div>
+        </div>
+        <div class="product-found-banner" id="productFoundBanner">
+            <h4>✓ PRODUKT AUTOMATISCH ERKANNT</h4>
+            <p id="productFoundText"></p>
+        </div>
+        <div class="barcode-preview-box"><img id="barcodePreview" alt="Barcode"></div>
+        <div class="form-grid">
+            <div class="form-group"><label>Produktname *</label><input type="text" id="productName" placeholder="z.B. Milka Schokolade"></div>
+            <div class="form-group"><label>Marke</label><input type="text" id="productBrand" placeholder="z.B. Milka"></div>
+            <div class="form-group"><label>Preis (€) *</label><input type="number" id="productPrice" step="0.01" placeholder="2.99"></div>
+            <div class="form-group"><label>Kategorie</label><input type="text" id="productCategory" placeholder="z.B. Süßwaren"></div>
+            <div class="form-group full-width"><label>Produktinformationen</label><textarea id="productInfo" placeholder="Beschreibung, Inhaltsstoffe..."></textarea></div>
+            <div class="form-group full-width"><label>Deine Bewertung *</label><textarea id="reviewText" placeholder="Was hältst du von diesem Produkt?"></textarea></div>
+            <div class="form-group full-width">
+                <label>Bewertung (%)</label>
+                <div class="rating-input">
+                    <input type="range" id="ratingSlider" min="0" max="100" value="75">
+                    <span class="rating-value" id="ratingValue">75%</span>
+                </div>
+            </div>
+        </div>
         <div class="button-group">
-            <button class="btn" onclick="toggleAdminPanel()">Abbrechen</button>
-            <button class="btn btn-solid" onclick="adminLogin()">Login</button>
+            <button class="btn" onclick="cancelUpload()">Abbrechen</button>
+            <button class="btn btn-solid" onclick="saveProduct()">Produkt Speichern</button>
         </div>
     </div>
+    <!-- Products -->
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;">
+        <div class="section-title" style="border:none;padding:0;margin:0;">ALLE PRODUKTE</div>
+    </div>
+    <div class="products-grid" id="productsGrid"></div>
+    <div class="empty-state" id="emptyState">
+        <div class="empty-state-icon">📦</div>
+        <div class="empty-state-text">Noch keine Produkte</div>
+        <div class="empty-state-sub">Scanne dein erstes Produkt!</div>
+    </div>
+</div>
 
-    <script>
-        const STORAGE_KEY = 'produktforum_v2';
-        const ADMIN_PASSWORD = 'Admin404';
+<!-- PRODUCT MODAL -->
+<div class="modal" id="productModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <div class="modal-title-block">
+                <h2 id="modalTitle"></h2>
+                <div class="modal-brand" id="modalBrand"></div>
+            </div>
+            <button class="close-btn" onclick="closeModal()">×</button>
+        </div>
+        <div class="modal-body">
+            <div class="barcode-info-row">
+                <div><div class="barcode-label">BARCODE</div><div class="barcode-code" id="modalBarcode"></div></div>
+                <div id="modalApiSource" style="font-size:.72em;font-family:'Space Mono',monospace;color:var(--green);"></div>
+            </div>
+            <div class="product-detail-image"><img id="modalBarcodeImage" alt="Produktbild"></div>
+            <div class="detail-grid">
+                <div class="detail-item"><div class="detail-label">Preis</div><div class="detail-value" id="modalPrice"></div></div>
+                <div class="detail-item"><div class="detail-label">Ø Bewertung</div><div class="detail-value" id="modalRating" style="color:var(--green);"></div></div>
+                <div class="detail-item"><div class="detail-label">Bewertungen</div><div class="detail-value" id="modalReviewCount"></div></div>
+            </div>
+            <div class="form-group" style="margin-bottom:18px;"><label>Kategorie</label><div id="modalCategory" style="color:var(--muted);font-size:.88em;"></div></div>
+            <div id="modalApiDataSection" class="product-api-data" style="display:none;">
+                <div class="api-data-title">◈ PRODUKTDATEN (OPEN FOOD FACTS)</div>
+                <div class="api-tags" id="modalApiTags"></div>
+            </div>
+            <div class="form-group"><label>Produktinformationen</label><div id="modalInfo" style="color:var(--muted);line-height:1.62;font-size:.88em;"></div></div>
+            <div class="edit-form" id="editForm">
+                <h3 class="section-title" style="font-size:1.15em;">PRODUKT BEARBEITEN</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>Produktname</label><input type="text" id="editProductName"></div>
+                    <div class="form-group"><label>Marke</label><input type="text" id="editProductBrand"></div>
+                    <div class="form-group"><label>Preis (€)</label><input type="number" id="editProductPrice" step="0.01"></div>
+                    <div class="form-group"><label>Kategorie</label><input type="text" id="editProductCategory"></div>
+                    <div class="form-group full-width"><label>Produktinformationen</label><textarea id="editProductInfo"></textarea></div>
+                </div>
+                <div class="button-group">
+                    <button class="btn" onclick="cancelEdit()">Abbrechen</button>
+                    <button class="btn btn-solid" onclick="saveEdit()">Speichern</button>
+                </div>
+            </div>
+            <div class="reviews-section">
+                <h3 class="section-title" style="font-size:1.15em;">BEWERTUNGEN</h3>
+                <div id="modalReviews"></div>
+                <div id="addReviewArea" style="margin-top:14px;"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
-        let isAdmin = false;
-        let currentProduct = null;
-        let currentBarcodeImage = null;
-        let currentBarcode = null;
-        let isScanning = false;
-        let currentApiData = null;
+<div class="toast" id="toast"></div>
 
-        document.addEventListener('DOMContentLoaded', () => {
-            setupEventListeners();
-            displayProducts();
+<script>
+const STORAGE_KEY='pf_products_v3',USERS_KEY='pf_users_v1',SESSION_KEY='pf_session_v1',VOTES_KEY='pf_votes_v1',ADMIN_PW='Admin404';
+let isAdmin=false,currentUser=null,currentProduct=null,currentBarcodeImage=null,currentBarcode=null,isScanning=false,currentApiData=null;
+
+document.addEventListener('DOMContentLoaded',()=>{
+    loadSession();
+    applyTheme(localStorage.getItem('pf_theme')||'dark');
+    setupEventListeners();
+    displayProducts();
+});
+
+function setupEventListeners(){
+    const ua=document.getElementById('uploadArea'),fi=document.getElementById('fileInput');
+    ua.addEventListener('click',()=>fi.click());
+    ua.addEventListener('dragover',e=>{e.preventDefault();ua.classList.add('dragover');});
+    ua.addEventListener('dragleave',()=>ua.classList.remove('dragover'));
+    ua.addEventListener('drop',e=>{e.preventDefault();ua.classList.remove('dragover');const f=e.dataTransfer.files[0];if(f&&f.type.startsWith('image/'))handleImageUpload(f);});
+    fi.addEventListener('change',e=>{if(e.target.files[0])handleImageUpload(e.target.files[0]);});
+    document.getElementById('ratingSlider').addEventListener('input',e=>document.getElementById('ratingValue').textContent=e.target.value+'%');
+    document.getElementById('productModal').addEventListener('click',e=>{if(e.target.id==='productModal')closeModal();});
+}
+
+/* THEME */
+function applyTheme(t){
+    document.documentElement.setAttribute('data-theme',t);
+    localStorage.setItem('pf_theme',t);
+    document.getElementById('themeToggle').classList.toggle('on',t==='light');
+}
+function toggleTheme(){applyTheme(document.documentElement.getAttribute('data-theme')==='dark'?'light':'dark');}
+
+/* SETTINGS */
+function openSettings(){document.getElementById('settingsOverlay').classList.add('active');updateSettingsUI();}
+function closeSettings(){document.getElementById('settingsOverlay').classList.remove('active');}
+function closeSettingsIfOutside(e){if(e.target.id==='settingsOverlay')closeSettings();}
+function updateSettingsUI(){
+    const li=document.getElementById('accountLoggedIn'),lo=document.getElementById('accountLoggedOut');
+    if(currentUser){
+        li.classList.add('active');lo.classList.add('hidden');
+        document.getElementById('settingsUsername').textContent=currentUser.username;
+        const av=document.getElementById('settingsAvatar');
+        av.textContent=currentUser.username[0].toUpperCase();
+        av.style.background=currentUser.color;av.style.color='#000';
+        const products=getProducts();
+        const rc=products.reduce((s,p)=>s+p.reviews.filter(r=>r.author===currentUser.username).length,0);
+        document.getElementById('settingsStats').textContent=rc+' Bewertung(en) verfasst';
+    } else {
+        li.classList.remove('active');lo.classList.remove('hidden');
+    }
+    document.getElementById('adminLoggedIn').classList.toggle('active',isAdmin);
+    document.getElementById('adminLoggedOut').style.display=isAdmin?'none':'block';
+}
+
+/* ACCOUNT */
+function getUsers(){try{return JSON.parse(localStorage.getItem(USERS_KEY)||'{}')}catch{return {};}}
+function saveUsers(u){localStorage.setItem(USERS_KEY,JSON.stringify(u));}
+function loadSession(){try{const s=JSON.parse(localStorage.getItem(SESSION_KEY));if(s&&s.username){currentUser=s;updateHeaderUser();}}catch{}}
+function saveSession(u){localStorage.setItem(SESSION_KEY,JSON.stringify(u));}
+const COLORS=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#00cec9'];
+function randomColor(){return COLORS[Math.floor(Math.random()*COLORS.length)];}
+
+function registerUser(){
+    const uname=document.getElementById('regUsername').value.trim();
+    const pw=document.getElementById('regPassword').value;
+    if(!uname||uname.length<2){showToast('Name muss mind. 2 Zeichen haben');return;}
+    if(!pw||pw.length<4){showToast('Passwort muss mind. 4 Zeichen haben');return;}
+    const users=getUsers();
+    if(users[uname]){showToast('Benutzername bereits vergeben!');return;}
+    users[uname]={pw,color:randomColor()};
+    saveUsers(users);
+    currentUser={username:uname,color:users[uname].color};
+    saveSession(currentUser);updateHeaderUser();updateSettingsUI();
+    showToast('Willkommen, '+uname+'! 👋');
+}
+function loginUser(){
+    const uname=document.getElementById('regUsername').value.trim();
+    const pw=document.getElementById('regPassword').value;
+    const users=getUsers();
+    if(!users[uname]){showToast('Benutzer nicht gefunden');return;}
+    if(users[uname].pw!==pw){showToast('Falsches Passwort');return;}
+    currentUser={username:uname,color:users[uname].color};
+    saveSession(currentUser);updateHeaderUser();updateSettingsUI();
+    showToast('Willkommen zurück, '+uname+'! 👋');
+}
+function logout(){
+    currentUser=null;localStorage.removeItem(SESSION_KEY);
+    updateHeaderUser();updateSettingsUI();displayProducts();
+    if(currentProduct)showProductDetail(currentProduct);
+    showToast('Abgemeldet');
+}
+function updateHeaderUser(){
+    const chip=document.getElementById('userChip');
+    if(currentUser){
+        chip.classList.add('active');
+        document.getElementById('headerUsername').textContent=currentUser.username;
+        const av=document.getElementById('headerAvatar');
+        av.textContent=currentUser.username[0].toUpperCase();
+        av.style.background=currentUser.color;av.style.color='#000';
+    } else {chip.classList.remove('active');}
+}
+
+/* ADMIN */
+function adminLogin(){
+    if(document.getElementById('adminPassword').value===ADMIN_PW){
+        isAdmin=true;document.getElementById('adminBadge').classList.add('active');
+        document.getElementById('adminPassword').value='';
+        displayProducts();updateSettingsUI();showToast('Admin-Modus aktiviert 🔐');
+    } else showToast('Falsches Admin-Passwort');
+}
+function adminLogout(){
+    isAdmin=false;document.getElementById('adminBadge').classList.remove('active');
+    displayProducts();updateSettingsUI();showToast('Admin-Modus deaktiviert');
+}
+
+/* VOTES */
+function getVotes(){try{return JSON.parse(localStorage.getItem(VOTES_KEY)||'{}')}catch{return {};}}
+function saveVotes(v){localStorage.setItem(VOTES_KEY,JSON.stringify(v));}
+function voteReview(reviewId,voteType){
+    if(!currentUser){showToast('Bitte erst anmelden, um zu voten');openSettings();return;}
+    const votes=getVotes();
+    const key=currentUser.username+'_'+reviewId;
+    const prev=votes[key];
+    if(prev===voteType)delete votes[key];else votes[key]=voteType;
+    saveVotes(votes);
+    const products=getProducts();
+    const pidx=products.findIndex(p=>p.id===currentProduct.id);
+    if(pidx!==-1){
+        const ridx=products[pidx].reviews.findIndex(r=>r.id===reviewId);
+        if(ridx!==-1){
+            const rv=products[pidx].reviews[ridx];
+            rv.likes=Object.entries(votes).filter(([k,v])=>k.endsWith('_'+reviewId)&&v==='like').length;
+            rv.dislikes=Object.entries(votes).filter(([k,v])=>k.endsWith('_'+reviewId)&&v==='dislike').length;
+            saveProducts(products);showProductDetail(products[pidx]);
+        }
+    }
+}
+function getUserVote(reviewId){
+    if(!currentUser)return null;
+    return getVotes()[currentUser.username+'_'+reviewId]||null;
+}
+
+/* DATA */
+function getProducts(){try{return JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]')}catch{return [];}}
+function saveProducts(p){localStorage.setItem(STORAGE_KEY,JSON.stringify(p));}
+
+/* SCAN */
+function handleImageUpload(file){
+    const reader=new FileReader();
+    reader.onload=e=>{
+        currentBarcodeImage=e.target.result;
+        document.getElementById('uploadSection').style.display='none';
+        document.getElementById('scannerContainer').style.display='block';
+        scanBarcode(e.target.result);
+    };
+    reader.readAsDataURL(file);
+}
+function scanBarcode(imageDataUrl){
+    if(isScanning)return;isScanning=true;setStep('scan','active');
+    const img=new Image();
+    img.onload=()=>{
+        Quagga.decodeSingle({
+            src:imageDataUrl,numOfWorkers:0,inputStream:{size:800},
+            decoder:{readers:['ean_reader','ean_8_reader','code_128_reader','code_39_reader','upc_reader','upc_e_reader','i2of5_reader']},
+            locate:true
+        },result=>{
+            isScanning=false;
+            if(result&&result.codeResult){
+                setStep('scan','done');currentBarcode=result.codeResult.code;
+                document.getElementById('barcodeResult').innerHTML=`<div class="barcode-result"><div class="barcode-label">ERKANNTER BARCODE</div><div class="barcode-number">${currentBarcode}</div></div>`;
+                document.getElementById('lookupStatus').style.display='block';
+                lookupProduct(currentBarcode);
+            } else {
+                setStep('scan','error');
+                document.getElementById('scannerStatus').innerHTML='<span style="color:var(--red)">❌ Kein Barcode erkannt</span>';
+                setTimeout(()=>{
+                    if(confirm('Kein Barcode gefunden. Nochmal versuchen?'))cancelScan();
+                    else{currentBarcode='MANUAL_'+Date.now();document.getElementById('lookupStatus').style.display='block';lookupProduct(currentBarcode);}
+                },800);
+            }
         });
-
-        function setupEventListeners() {
-            const uploadArea = document.getElementById('uploadArea');
-            const fileInput = document.getElementById('fileInput');
-
-            uploadArea.addEventListener('click', () => fileInput.click());
-
-            uploadArea.addEventListener('dragover', e => {
-                e.preventDefault();
-                uploadArea.classList.add('dragover');
-            });
-            uploadArea.addEventListener('dragleave', () => uploadArea.classList.remove('dragover'));
-            uploadArea.addEventListener('drop', e => {
-                e.preventDefault();
-                uploadArea.classList.remove('dragover');
-                const file = e.dataTransfer.files[0];
-                if (file && file.type.startsWith('image/')) handleImageUpload(file);
-            });
-
-            fileInput.addEventListener('change', e => {
-                if (e.target.files[0]) handleImageUpload(e.target.files[0]);
-            });
-
-            document.getElementById('ratingSlider').addEventListener('input', e => {
-                document.getElementById('ratingValue').textContent = e.target.value + '%';
-            });
-            document.getElementById('newRatingSlider').addEventListener('input', e => {
-                document.getElementById('newRatingValue').textContent = e.target.value + '%';
-            });
-
-            document.getElementById('productModal').addEventListener('click', e => {
-                if (e.target.id === 'productModal') closeModal();
-            });
+    };
+    img.src=imageDataUrl;
+}
+async function lookupProduct(barcode){
+    setStep('lookup','active');currentApiData=null;
+    if(barcode.startsWith('MANUAL_')){setStep('lookup','error');setStep('fill','done');showForm(null);return;}
+    try{
+        const res=await fetch('https://world.openfoodfacts.org/api/v2/product/'+barcode+'.json');
+        const data=await res.json();
+        if(data.status===1&&data.product){
+            setStep('lookup','done');setStep('fill','active');currentApiData=data.product;
+            const existing=getProducts().find(p=>p.barcode===barcode);
+            if(existing){document.getElementById('scannerContainer').style.display='none';showProductDetail(existing);return;}
+            setTimeout(()=>{setStep('fill','done');document.getElementById('scannerContainer').style.display='none';showForm(data.product);},600);
+        } else {
+            setStep('lookup','error');
+            const existing=getProducts().find(p=>p.barcode===barcode);
+            if(existing){document.getElementById('scannerContainer').style.display='none';showProductDetail(existing);return;}
+            setStep('fill','done');setTimeout(()=>{document.getElementById('scannerContainer').style.display='none';showForm(null);},500);
         }
+    }catch{
+        setStep('lookup','error');
+        const existing=getProducts().find(p=>p.barcode===barcode);
+        if(existing){document.getElementById('scannerContainer').style.display='none';showProductDetail(existing);return;}
+        setStep('fill','done');setTimeout(()=>{document.getElementById('scannerContainer').style.display='none';showForm(null);},500);
+    }
+}
+function setStep(step,state){
+    const el=document.getElementById('step-'+step);if(!el)return;
+    el.className='lookup-step '+state;
+    el.querySelector('.step-icon').textContent={active:'⟳',done:'✓',error:'✗'}[state]||'⬜';
+}
+async function fetchImageAsBase64(url){
+    try{const r=await fetch(url);if(!r.ok)return null;const blob=await r.blob();return new Promise((res,rej)=>{const rd=new FileReader();rd.onload=()=>res(rd.result);rd.onerror=()=>rej(null);rd.readAsDataURL(blob);});}catch{return null;}
+}
+async function showForm(product){
+    document.getElementById('detectedBarcode').textContent=currentBarcode;
+    document.getElementById('barcodePreview').src=currentBarcodeImage;
+    if(product){
+        const name=product.product_name_de||product.product_name||product.product_name_en||'';
+        const brand=product.brands||'';
+        const cat=product.categories_tags?.[0]?.replace('en:','').replace(/-/g,' ')||'';
+        let dp=[];
+        if(product.quantity)dp.push('Menge: '+product.quantity);
+        const ing=product.ingredients_text_de||product.ingredients_text;
+        if(ing)dp.push('Zutaten: '+ing.substring(0,300)+(ing.length>300?'...':''));
+        if(product.nutriscore_grade)dp.push('Nutri-Score: '+product.nutriscore_grade.toUpperCase());
+        if(product.packaging)dp.push('Verpackung: '+product.packaging);
+        if(product.countries)dp.push('Herkunft: '+product.countries);
+        setAutoField('productName',name);setAutoField('productBrand',brand);setAutoField('productCategory',cat);setAutoField('productInfo',dp.join('\n\n'));
+        const apiImg=product.image_front_small_url||product.image_front_url||product.image_url;
+        if(apiImg){const b64=await fetchImageAsBase64(apiImg);if(b64){currentBarcodeImage=b64;document.getElementById('barcodePreview').src=b64;}}
+        document.getElementById('productFoundBanner').style.display='block';
+        document.getElementById('productFoundText').textContent='Gefunden: "'+name+'"'+(brand?' von '+brand:'')+'. Felder wurden automatisch ausgefüllt.';
+        document.getElementById('barcodeSourceBadge').innerHTML='<span style="font-size:.72em;font-family:Space Mono,monospace;color:var(--green);">◈ OPEN FOOD FACTS</span>';
+    } else {
+        document.getElementById('productFoundBanner').style.display='none';
+        document.getElementById('barcodeSourceBadge').innerHTML='<span style="font-size:.72em;font-family:Space Mono,monospace;color:var(--muted);">MANUELL</span>';
+    }
+    document.getElementById('productForm').style.display='block';
+}
+function setAutoField(id,val){const el=document.getElementById(id);if(!el||!val)return;el.value=val;el.classList.add('auto-filled');}
 
-        // ── Image Upload & Scan ─────────────────────────────────────────────
+/* SAVE PRODUCT */
+function saveProduct(){
+    const name=document.getElementById('productName').value.trim();
+    const price=document.getElementById('productPrice').value;
+    const reviewText=document.getElementById('reviewText').value.trim();
+    if(!name||!price||!reviewText){showToast('Bitte Name, Preis und Bewertungstext ausfüllen');return;}
+    const products=getProducts();
+    const newProduct={
+        id:Date.now().toString(),barcode:currentBarcode,barcodeImage:currentBarcodeImage,
+        name,brand:document.getElementById('productBrand').value.trim(),
+        category:document.getElementById('productCategory').value.trim(),
+        price:parseFloat(price),info:document.getElementById('productInfo').value.trim()||'Keine weiteren Informationen',
+        fromApi:!!currentApiData,
+        apiData:currentApiData?{nutriscore:currentApiData.nutriscore_grade,quantity:currentApiData.quantity,countries:currentApiData.countries,packaging:currentApiData.packaging,labels:currentApiData.labels_tags}:null,
+        reviews:[{id:Date.now().toString(),text:reviewText,rating:parseInt(document.getElementById('ratingSlider').value),author:currentUser?currentUser.username:'Anonym',date:new Date().toISOString(),likes:0,dislikes:0}],
+        createdAt:new Date().toISOString()
+    };
+    products.push(newProduct);saveProducts(products);
+    resetForm();displayProducts();showProductDetail(newProduct);
+    showToast('Produkt gespeichert ✓');
+}
 
-        function handleImageUpload(file) {
-            const reader = new FileReader();
-            reader.onload = e => {
-                currentBarcodeImage = e.target.result;
-                document.getElementById('uploadSection').style.display = 'none';
-                document.getElementById('scannerContainer').style.display = 'block';
-                scanBarcode(e.target.result);
-            };
-            reader.readAsDataURL(file);
+/* DISPLAY */
+function displayProducts(){
+    const products=getProducts();
+    const grid=document.getElementById('productsGrid'),empty=document.getElementById('emptyState');
+    if(!products.length){grid.style.display='none';empty.style.display='block';return;}
+    grid.style.display='grid';empty.style.display='none';grid.innerHTML='';
+    products.sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt)).forEach(p=>{
+        const avg=calcAvg(p.reviews);
+        const card=document.createElement('div');card.className='product-card';
+        card.innerHTML=`
+            ${p.fromApi?'<div class="api-badge">◈ API</div>':''}
+            <div class="product-barcode-badge">${p.barcode}</div>
+            <div class="product-image"><img src="${p.barcodeImage||''}" alt="${p.name}" onerror="this.outerHTML='<div style=\\'font-size:3em;opacity:.15;\\'>📦</div>'"></div>
+            <div class="product-content">
+                <div class="product-name">${p.name}</div>
+                ${p.brand?'<div class="product-brand">'+p.brand+'</div>':''}
+                <div class="product-meta"><div class="product-price">${p.price.toFixed(2)} €</div><div class="product-rating">${avg}%</div></div>
+                <div class="product-info">${trunc(p.info,88)}</div>
+                <div class="product-stats"><span>${p.reviews.length} Bewertung(en)</span><span>${fmtDate(p.createdAt)}</span></div>
+            </div>
+            <div class="admin-controls ${isAdmin?'visible':''}" id="ac-${p.id}">
+                <button class="btn btn-red" onclick="deleteProduct('${p.id}',event)">Löschen</button>
+                <button class="btn" onclick="editProduct('${p.id}',event)">Bearbeiten</button>
+            </div>`;
+        card.addEventListener('click',e=>{if(!e.target.closest('.admin-controls'))showProductDetail(p);});
+        grid.appendChild(card);
+    });
+}
+
+function showProductDetail(product){
+    currentProduct=product;const avg=calcAvg(product.reviews);
+    document.getElementById('modalTitle').textContent=product.name;
+    document.getElementById('modalBrand').textContent=product.brand?'Von '+product.brand:'';
+    document.getElementById('modalBarcode').textContent=product.barcode;
+    const mImg=document.getElementById('modalBarcodeImage');
+    mImg.src=product.barcodeImage||'';
+    mImg.onerror=function(){this.style.display='none';this.parentElement.innerHTML+='<div style="font-size:4em;opacity:.12">📦</div>';};
+    document.getElementById('modalPrice').textContent=product.price.toFixed(2)+' €';
+    document.getElementById('modalRating').textContent=avg+'%';
+    document.getElementById('modalReviewCount').textContent=product.reviews.length;
+    document.getElementById('modalInfo').textContent=product.info;
+    document.getElementById('modalCategory').textContent=product.category||'—';
+    document.getElementById('modalApiSource').textContent=product.fromApi?'◈ OPEN FOOD FACTS':'';
+    const apiSec=document.getElementById('modalApiDataSection');
+    if(product.apiData){
+        apiSec.style.display='block';const tags=[];
+        if(product.apiData.nutriscore)tags.push('Nutri-Score: '+product.apiData.nutriscore.toUpperCase());
+        if(product.apiData.quantity)tags.push('Menge: '+product.apiData.quantity);
+        if(product.apiData.countries)tags.push('Herkunft: '+product.apiData.countries);
+        if(product.apiData.packaging)tags.push('Verpackung: '+product.apiData.packaging);
+        if(product.apiData.labels)product.apiData.labels.slice(0,4).forEach(l=>tags.push(l.replace('en:','').replace(/-/g,' ')));
+        document.getElementById('modalApiTags').innerHTML=tags.map(t=>'<span class="api-tag">'+t+'</span>').join('');
+    } else apiSec.style.display='none';
+    displayReviews(product.reviews);
+    renderAddReviewArea();
+    document.getElementById('productModal').classList.add('active');
+    document.body.style.overflow='hidden';
+}
+
+function displayReviews(reviews){
+    const container=document.getElementById('modalReviews');container.innerHTML='';
+    const users=getUsers();
+    reviews.sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(review=>{
+        const uv=getUserVote(review.id);
+        const ac=review.author&&users[review.author]?users[review.author].color:'#888';
+        const div=document.createElement('div');div.className='review';
+        div.innerHTML=`
+            <div class="review-header">
+                <div class="review-header-left">
+                    <div class="review-author-chip">
+                        <div class="review-avatar" style="background:${ac};color:#000;">${(review.author||'?')[0].toUpperCase()}</div>
+                        <span>${review.author||'Anonym'}</span>
+                    </div>
+                    <span class="review-rating">${review.rating}%</span>
+                </div>
+                <span class="review-date">${fmtDate(review.date)}</span>
+            </div>
+            <div class="review-text">${review.text}</div>
+            <div class="review-actions">
+                <button class="like-btn ${uv==='like'?'active':''}" onclick="voteReview('${review.id}','like')">👍 <span>${review.likes||0}</span></button>
+                <button class="dislike-btn ${uv==='dislike'?'active':''}" onclick="voteReview('${review.id}','dislike')">👎 <span>${review.dislikes||0}</span></button>
+                <div class="review-admin-controls ${isAdmin?'visible':''}">
+                    <button class="btn btn-sm btn-red" onclick="deleteReview('${review.id}')">Löschen</button>
+                </div>
+            </div>`;
+        container.appendChild(div);
+    });
+}
+
+function renderAddReviewArea(){
+    const area=document.getElementById('addReviewArea');
+    if(currentUser){
+        area.innerHTML=`
+            <button class="btn btn-green" style="width:100%;" onclick="toggleAddReview()">+ BEWERTUNG HINZUFÜGEN</button>
+            <div class="add-review-section" id="addReviewSection">
+                <div class="form-group"><label>Deine Bewertung</label><textarea id="newReviewText" placeholder="Teile deine Erfahrung..."></textarea></div>
+                <div class="form-group">
+                    <label>Bewertung (%)</label>
+                    <div class="rating-input">
+                        <input type="range" id="newRatingSlider" min="0" max="100" value="75" oninput="document.getElementById('newRatingValue').textContent=this.value+'%'">
+                        <span class="rating-value" id="newRatingValue">75%</span>
+                    </div>
+                </div>
+                <div class="button-group">
+                    <button class="btn" onclick="cancelNewReview()">Abbrechen</button>
+                    <button class="btn btn-solid" onclick="submitNewReview()">Senden</button>
+                </div>
+            </div>`;
+    } else {
+        area.innerHTML=`
+            <div class="login-required-banner">
+                <div>Melde dich an, um eine Bewertung zu schreiben</div>
+                <button class="btn btn-green" style="margin-top:10px;" onclick="openSettings()">ANMELDEN / REGISTRIEREN</button>
+            </div>`;
+    }
+}
+
+function toggleAddReview(){
+    const s=document.getElementById('addReviewSection');if(s)s.classList.toggle('active');
+}
+function cancelNewReview(){
+    const s=document.getElementById('addReviewSection');
+    if(s){s.classList.remove('active');const t=s.querySelector('#newReviewText');if(t)t.value='';}
+}
+function submitNewReview(){
+    if(!currentUser){showToast('Bitte erst anmelden!');openSettings();return;}
+    const text=document.getElementById('newReviewText')?.value.trim();
+    const rating=parseInt(document.getElementById('newRatingSlider')?.value||75);
+    if(!text){showToast('Bitte eine Bewertung schreiben!');return;}
+    const products=getProducts();
+    const idx=products.findIndex(p=>p.id===currentProduct.id);
+    if(idx!==-1){
+        products[idx].reviews.push({id:Date.now().toString(),text,rating,author:currentUser.username,date:new Date().toISOString(),likes:0,dislikes:0});
+        saveProducts(products);displayProducts();showProductDetail(products[idx]);
+        showToast('Bewertung gespeichert ✓');
+    }
+}
+
+/* ADMIN CONTROLS */
+function deleteProduct(id,e){
+    e.stopPropagation();if(!isAdmin)return;
+    if(confirm('Produkt wirklich löschen?')){saveProducts(getProducts().filter(p=>p.id!==id));displayProducts();showToast('Produkt gelöscht');}
+}
+function editProduct(id,e){
+    e.stopPropagation();if(!isAdmin)return;
+    const product=getProducts().find(p=>p.id===id);if(!product)return;
+    currentProduct=product;showProductDetail(product);
+    document.getElementById('editForm').classList.add('active');
+    document.getElementById('editProductName').value=product.name;
+    document.getElementById('editProductBrand').value=product.brand||'';
+    document.getElementById('editProductPrice').value=product.price;
+    document.getElementById('editProductCategory').value=product.category||'';
+    document.getElementById('editProductInfo').value=product.info;
+}
+function cancelEdit(){document.getElementById('editForm').classList.remove('active');}
+function saveEdit(){
+    const name=document.getElementById('editProductName').value.trim();
+    const price=document.getElementById('editProductPrice').value;
+    if(!name||!price){showToast('Name und Preis sind Pflicht');return;}
+    const products=getProducts();
+    const idx=products.findIndex(p=>p.id===currentProduct.id);
+    if(idx!==-1){
+        products[idx].name=name;products[idx].brand=document.getElementById('editProductBrand').value.trim();
+        products[idx].price=parseFloat(price);products[idx].category=document.getElementById('editProductCategory').value.trim();
+        products[idx].info=document.getElementById('editProductInfo').value.trim();
+        saveProducts(products);displayProducts();showProductDetail(products[idx]);
+        document.getElementById('editForm').classList.remove('active');showToast('Änderungen gespeichert');
+    }
+}
+function deleteReview(reviewId){
+    if(!isAdmin)return;if(!confirm('Bewertung löschen?'))return;
+    const products=getProducts();const idx=products.findIndex(p=>p.id===currentProduct.id);
+    if(idx!==-1){
+        products[idx].reviews=products[idx].reviews.filter(r=>r.id!==reviewId);
+        if(!products[idx].reviews.length){
+            if(confirm('Letzte Bewertung gelöscht. Auch Produkt löschen?')){products.splice(idx,1);saveProducts(products);displayProducts();closeModal();return;}
         }
-
-        function scanBarcode(imageDataUrl) {
-            if (isScanning) return;
-            isScanning = true;
-            setStep('scan', 'active');
-
-            const img = new Image();
-            img.onload = () => {
-                Quagga.decodeSingle({
-                    src: imageDataUrl,
-                    numOfWorkers: 0,
-                    inputStream: { size: 800 },
-                    decoder: {
-                        readers: [
-                            'ean_reader', 'ean_8_reader', 'code_128_reader',
-                            'code_39_reader', 'upc_reader', 'upc_e_reader', 'i2of5_reader'
-                        ]
-                    },
-                    locate: true
-                }, result => {
-                    isScanning = false;
-                    if (result && result.codeResult) {
-                        setStep('scan', 'done');
-                        currentBarcode = result.codeResult.code;
-
-                        document.getElementById('barcodeResult').innerHTML = `
-                            <div class="barcode-result">
-                                <div class="barcode-label">ERKANNTER BARCODE</div>
-                                <div class="barcode-number">${currentBarcode}</div>
-                            </div>`;
-
-                        document.getElementById('lookupStatus').style.display = 'block';
-                        lookupProduct(currentBarcode);
-                    } else {
-                        setStep('scan', 'error');
-                        document.getElementById('scannerStatus').innerHTML =
-                            '<span style="color: var(--red);">❌ Kein Barcode erkannt</span>';
-
-                        setTimeout(() => {
-                            if (confirm('Kein Barcode gefunden. Nochmal versuchen?')) {
-                                cancelScan();
-                            } else {
-                                currentBarcode = 'MANUAL_' + Date.now();
-                                document.getElementById('lookupStatus').style.display = 'block';
-                                lookupProduct(currentBarcode);
-                            }
-                        }, 800);
-                    }
-                });
-            };
-            img.src = imageDataUrl;
-        }
-
-        // ── Open Food Facts API Lookup ──────────────────────────────────────
-
-        async function lookupProduct(barcode) {
-            setStep('lookup', 'active');
-            currentApiData = null;
-
-            // Skip lookup for manual codes
-            if (barcode.startsWith('MANUAL_')) {
-                setStep('lookup', 'error');
-                setStep('fill', 'done');
-                showForm(null);
-                return;
-            }
-
-            try {
-                const url = `https://world.openfoodfacts.org/api/v2/product/${barcode}.json`;
-                const response = await fetch(url);
-                const data = await response.json();
-
-                if (data.status === 1 && data.product) {
-                    setStep('lookup', 'done');
-                    setStep('fill', 'active');
-                    currentApiData = data.product;
-
-                    // Check if product already in local DB
-                    const products = getProducts();
-                    const existing = products.find(p => p.barcode === barcode);
-                    if (existing) {
-                        document.getElementById('scannerContainer').style.display = 'none';
-                        showProductDetail(existing);
-                        return;
-                    }
-
-                    setTimeout(() => {
-                        setStep('fill', 'done');
-                        document.getElementById('scannerContainer').style.display = 'none';
-                        showForm(data.product);
-                    }, 600);
-
-                } else {
-                    // Not in Open Food Facts, check local DB
-                    setStep('lookup', 'error');
-
-                    const products = getProducts();
-                    const existing = products.find(p => p.barcode === barcode);
-                    if (existing) {
-                        document.getElementById('scannerContainer').style.display = 'none';
-                        showProductDetail(existing);
-                        return;
-                    }
-
-                    setStep('fill', 'done');
-                    setTimeout(() => {
-                        document.getElementById('scannerContainer').style.display = 'none';
-                        showForm(null);
-                    }, 500);
-                }
-            } catch (err) {
-                console.error('API lookup failed:', err);
-                setStep('lookup', 'error');
-
-                const products = getProducts();
-                const existing = products.find(p => p.barcode === barcode);
-                if (existing) {
-                    document.getElementById('scannerContainer').style.display = 'none';
-                    showProductDetail(existing);
-                    return;
-                }
-
-                setStep('fill', 'done');
-                setTimeout(() => {
-                    document.getElementById('scannerContainer').style.display = 'none';
-                    showForm(null);
-                }, 500);
-            }
-        }
-
-        function setStep(step, state) {
-            const el = document.getElementById(`step-${step}`);
-            if (!el) return;
-            el.className = `lookup-step ${state}`;
-            const icons = { active: '⟳', done: '✓', error: '✗' };
-            el.querySelector('.step-icon').textContent = icons[state] || '⬜';
-        }
-
-        // ── Show Form with auto-filled data ────────────────────────────────
-
-        // Lädt eine externe Bild-URL und konvertiert sie sicher zu base64 über einen Proxy
-        async function fetchImageAsBase64(url) {
-            // Open Food Facts erlaubt CORS – wir laden per fetch und konvertieren zu blob->base64
-            try {
-                const resp = await fetch(url);
-                if (!resp.ok) return null;
-                const blob = await resp.blob();
-                return await new Promise((resolve, reject) => {
-                    const reader = new FileReader();
-                    reader.onload = () => resolve(reader.result);
-                    reader.onerror = () => reject(null);
-                    reader.readAsDataURL(blob);
-                });
-            } catch {
-                return null;
-            }
-        }
-
-        async function showForm(product) {
-            document.getElementById('detectedBarcode').textContent = currentBarcode;
-            // Zeige erstmal das Barcode-Scan-Bild als Platzhalter
-            document.getElementById('barcodePreview').src = currentBarcodeImage;
-
-            if (product) {
-                const name = product.product_name_de || product.product_name || product.product_name_en || '';
-                const brand = product.brands || '';
-                const category = product.categories_tags ?
-                    product.categories_tags[0]?.replace('en:', '').replace(/-/g, ' ') : '';
-
-                let descParts = [];
-                if (product.quantity) descParts.push(`Menge: ${product.quantity}`);
-                if (product.ingredients_text_de || product.ingredients_text) {
-                    const ing = product.ingredients_text_de || product.ingredients_text;
-                    descParts.push(`Zutaten: ${ing.substring(0, 300)}${ing.length > 300 ? '...' : ''}`);
-                }
-                if (product.nutriscore_grade) descParts.push(`Nutri-Score: ${product.nutriscore_grade.toUpperCase()}`);
-                if (product.packaging) descParts.push(`Verpackung: ${product.packaging}`);
-                if (product.countries) descParts.push(`Herkunft: ${product.countries}`);
-
-                setAutoField('productName', name);
-                setAutoField('productBrand', brand);
-                setAutoField('productCategory', category);
-                setAutoField('productInfo', descParts.join('\n\n'));
-
-                // Produktbild von API laden – als base64 konvertieren damit es sicher gespeichert werden kann
-                const apiImageUrl = product.image_front_small_url || product.image_front_url || product.image_url;
-                if (apiImageUrl) {
-                    const b64 = await fetchImageAsBase64(apiImageUrl);
-                    if (b64) {
-                        currentBarcodeImage = b64; // überschreibt Barcode-Scan mit echtem Produktbild
-                        document.getElementById('barcodePreview').src = b64;
-                    }
-                    // Falls fetch fehlschlägt → bleibt beim Barcode-Bild
-                }
-
-                document.getElementById('productFoundBanner').style.display = 'block';
-                document.getElementById('productFoundText').textContent =
-                    `Gefunden: "${name}"${brand ? ' von ' + brand : ''}. Felder wurden automatisch ausgefüllt.`;
-                document.getElementById('barcodeSourceBadge').innerHTML =
-                    '<span style="font-size:0.72em; font-family: Space Mono, monospace; color: var(--green);">◈ OPEN FOOD FACTS</span>';
-            } else {
-                document.getElementById('productFoundBanner').style.display = 'none';
-                document.getElementById('barcodeSourceBadge').innerHTML =
-                    '<span style="font-size:0.72em; font-family: Space Mono, monospace; color: #555;">MANUELL</span>';
-            }
-
-            document.getElementById('productForm').style.display = 'block';
-        }
-
-        function setAutoField(id, value) {
-            const el = document.getElementById(id);
-            if (!el || !value) return;
-            el.value = value;
-            el.classList.add('auto-filled');
-        }
-
-        // ── Product CRUD ────────────────────────────────────────────────────
-
-        function getProducts() {
-            try {
-                return JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
-            } catch { return []; }
-        }
-
-        function saveProducts(products) {
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(products));
-        }
-
-        function saveProduct() {
-            const name = document.getElementById('productName').value.trim();
-            const price = document.getElementById('productPrice').value;
-            const brand = document.getElementById('productBrand').value.trim();
-            const category = document.getElementById('productCategory').value.trim();
-            const info = document.getElementById('productInfo').value.trim();
-            const reviewText = document.getElementById('reviewText').value.trim();
-            const rating = parseInt(document.getElementById('ratingSlider').value);
-
-            if (!name || !price || !reviewText) {
-                alert('Bitte fülle Name, Preis und Bewertungstext aus!');
-                return;
-            }
-
-            const products = getProducts();
-
-            // currentBarcodeImage wurde in showForm() ggf. bereits durch das API-Bild (base64) ersetzt
-            const displayImage = currentBarcodeImage;
-
-            const newProduct = {
-                id: Date.now().toString(),
-                barcode: currentBarcode,
-                barcodeImage: displayImage,
-                name,
-                brand,
-                category,
-                price: parseFloat(price),
-                info: info || 'Keine zusätzlichen Informationen',
-                fromApi: !!currentApiData,
-                apiData: currentApiData ? {
-                    nutriscore: currentApiData.nutriscore_grade,
-                    quantity: currentApiData.quantity,
-                    countries: currentApiData.countries,
-                    packaging: currentApiData.packaging,
-                    allergens: currentApiData.allergens_tags,
-                    labels: currentApiData.labels_tags,
-                } : null,
-                reviews: [{
-                    id: Date.now().toString(),
-                    text: reviewText,
-                    rating,
-                    date: new Date().toISOString()
-                }],
-                createdAt: new Date().toISOString()
-            };
-
-            products.push(newProduct);
-            saveProducts(products);
-
-            resetForm();
-            displayProducts();
-            showProductDetail(newProduct);
-        }
-
-        function displayProducts() {
-            const products = getProducts();
-            const grid = document.getElementById('productsGrid');
-            const empty = document.getElementById('emptyState');
-
-            if (products.length === 0) {
-                grid.style.display = 'none';
-                empty.style.display = 'block';
-                return;
-            }
-
-            grid.style.display = 'grid';
-            empty.style.display = 'none';
-            grid.innerHTML = '';
-
-            products
-                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                .forEach(product => {
-                    const avg = avgRating(product.reviews);
-                    const card = document.createElement('div');
-                    card.className = 'product-card';
-                    card.innerHTML = `
-                        ${product.fromApi ? '<div class="api-badge">◈ API</div>' : ''}
-                        <div class="product-barcode-badge">${product.barcode}</div>
-                        <div class="product-image${product.fromApi ? ' has-product-img' : ''}">
-                            <img src="${product.barcodeImage}" alt="${product.name}"
-                                 onerror="this.outerHTML='<div style=\'font-size:3em;opacity:0.2;\'>📦</div>'">
-                        </div>
-                        <div class="product-content">
-                            <div class="product-name">${product.name}</div>
-                            ${product.brand ? `<div class="product-brand">${product.brand}</div>` : ''}
-                            <div class="product-meta">
-                                <div class="product-price">${product.price.toFixed(2)} €</div>
-                                <div class="product-rating">${avg}%</div>
-                            </div>
-                            <div class="product-info">${truncate(product.info, 90)}</div>
-                            <div class="product-stats">
-                                <span>${product.reviews.length} Bewertung(en)</span>
-                                <span>${fmtDate(product.createdAt)}</span>
-                            </div>
-                        </div>
-                        <div class="admin-controls ${isAdmin ? 'visible' : ''}" id="ac-${product.id}">
-                            <button class="btn btn-red" onclick="deleteProduct('${product.id}',event)">Löschen</button>
-                            <button class="btn" onclick="editProduct('${product.id}',event)">Bearbeiten</button>
-                        </div>`;
-
-                    card.addEventListener('click', e => {
-                        if (!e.target.closest('.admin-controls')) showProductDetail(product);
-                    });
-                    grid.appendChild(card);
-                });
-        }
-
-        function showProductDetail(product) {
-            currentProduct = product;
-            const avg = avgRating(product.reviews);
-
-            document.getElementById('modalTitle').textContent = product.name;
-            document.getElementById('modalBrand').textContent = product.brand ? `Von ${product.brand}` : '';
-            document.getElementById('modalBarcode').textContent = product.barcode;
-            document.getElementById('modalBarcodeImage').src = product.barcodeImage || '';
-            document.getElementById('modalBarcodeImage').onerror = function() {
-                this.style.display = 'none';
-                this.parentElement.innerHTML += '<div style="font-size:4em;opacity:0.15;">📦</div>';
-            };
-            document.getElementById('modalPrice').textContent = product.price.toFixed(2) + ' €';
-            document.getElementById('modalRating').textContent = avg + '%';
-            document.getElementById('modalReviewCount').textContent = product.reviews.length;
-            document.getElementById('modalInfo').textContent = product.info;
-            document.getElementById('modalCategory').textContent = product.category || '—';
-            document.getElementById('modalApiSource').textContent = product.fromApi ? '◈ OPEN FOOD FACTS' : '';
-
-            // API tags
-            const apiSection = document.getElementById('modalApiDataSection');
-            const apiTags = document.getElementById('modalApiTags');
-            if (product.apiData) {
-                apiSection.style.display = 'block';
-                const tags = [];
-                if (product.apiData.nutriscore) tags.push(`Nutri-Score: ${product.apiData.nutriscore.toUpperCase()}`);
-                if (product.apiData.quantity) tags.push(`Menge: ${product.apiData.quantity}`);
-                if (product.apiData.countries) tags.push(`Herkunft: ${product.apiData.countries}`);
-                if (product.apiData.packaging) tags.push(`Verpackung: ${product.apiData.packaging}`);
-                if (product.apiData.labels) {
-                    product.apiData.labels.slice(0, 4).forEach(l =>
-                        tags.push(l.replace('en:', '').replace(/-/g, ' ')));
-                }
-                apiTags.innerHTML = tags.map(t => `<span class="api-tag">${t}</span>`).join('');
-            } else {
-                apiSection.style.display = 'none';
-            }
-
-            displayReviews(product.reviews);
-            document.getElementById('productModal').classList.add('active');
-            document.body.style.overflow = 'hidden';
-        }
-
-        function displayReviews(reviews) {
-            const container = document.getElementById('modalReviews');
-            container.innerHTML = '';
-
-            reviews
-                .sort((a, b) => new Date(b.date) - new Date(a.date))
-                .forEach(review => {
-                    const div = document.createElement('div');
-                    div.className = 'review';
-                    div.innerHTML = `
-                        <div class="review-header">
-                            <span class="review-rating">${review.rating}%</span>
-                            <span class="review-date">${fmtDate(review.date)}</span>
-                        </div>
-                        <div class="review-text">${review.text}</div>
-                        <div class="review-admin-controls ${isAdmin ? 'visible' : ''}">
-                            <button class="btn btn-red" onclick="deleteReview('${review.id}')">Löschen</button>
-                        </div>`;
-                    container.appendChild(div);
-                });
-        }
-
-        // ── Helpers ─────────────────────────────────────────────────────────
-
-        function avgRating(reviews) {
-            if (!reviews.length) return 0;
-            return Math.round(reviews.reduce((s, r) => s + r.rating, 0) / reviews.length);
-        }
-
-        function truncate(text, max) {
-            return text.length <= max ? text : text.substring(0, max) + '...';
-        }
-
-        function fmtDate(str) {
-            return new Date(str).toLocaleDateString('de-DE', {
-                year: 'numeric', month: 'short', day: 'numeric'
-            });
-        }
-
-        // ── UI Controls ─────────────────────────────────────────────────────
-
-        function cancelScan() {
-            isScanning = false;
-            document.getElementById('scannerContainer').style.display = 'none';
-            document.getElementById('uploadSection').style.display = 'none';
-            document.getElementById('barcodeResult').innerHTML = '';
-            document.getElementById('lookupStatus').style.display = 'none';
-            currentBarcode = null;
-            currentBarcodeImage = null;
-            currentApiData = null;
-        }
-
-        function showUploadSection() {
-            document.getElementById('uploadSection').style.display = 'block';
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-
-        function cancelUpload() { resetForm(); }
-
-        function resetForm() {
-            document.getElementById('uploadSection').style.display = 'none';
-            document.getElementById('productForm').style.display = 'none';
-            document.getElementById('scannerContainer').style.display = 'none';
-            document.getElementById('fileInput').value = '';
-            document.getElementById('productName').value = '';
-            document.getElementById('productBrand').value = '';
-            document.getElementById('productPrice').value = '';
-            document.getElementById('productCategory').value = '';
-            document.getElementById('productInfo').value = '';
-            document.getElementById('reviewText').value = '';
-            document.getElementById('ratingSlider').value = 75;
-            document.getElementById('ratingValue').textContent = '75%';
-            document.getElementById('barcodeResult').innerHTML = '';
-            document.getElementById('lookupStatus').style.display = 'none';
-            document.getElementById('productFoundBanner').style.display = 'none';
-            ['productName','productBrand','productPrice','productCategory','productInfo'].forEach(id => {
-                document.getElementById(id).classList.remove('auto-filled');
-            });
-            ['step-scan','step-lookup','step-fill'].forEach(id => {
-                const el = document.getElementById(id);
-                if (el) { el.className = 'lookup-step'; el.querySelector('.step-icon').textContent = '⬜'; }
-            });
-            currentBarcode = null;
-            currentBarcodeImage = null;
-            currentApiData = null;
-            isScanning = false;
-        }
-
-        function toggleAddReview() {
-            document.getElementById('addReviewSection').classList.toggle('active');
-        }
-
-        function cancelNewReview() {
-            document.getElementById('addReviewSection').classList.remove('active');
-            document.getElementById('newReviewText').value = '';
-            document.getElementById('newRatingSlider').value = 75;
-            document.getElementById('newRatingValue').textContent = '75%';
-        }
-
-        function submitNewReview() {
-            const text = document.getElementById('newReviewText').value.trim();
-            const rating = parseInt(document.getElementById('newRatingSlider').value);
-            if (!text) { alert('Bitte schreibe eine Bewertung!'); return; }
-
-            const products = getProducts();
-            const idx = products.findIndex(p => p.id === currentProduct.id);
-            if (idx !== -1) {
-                products[idx].reviews.push({ id: Date.now().toString(), text, rating, date: new Date().toISOString() });
-                saveProducts(products);
-                displayProducts();
-                showProductDetail(products[idx]);
-                cancelNewReview();
-            }
-        }
-
-        function closeModal() {
-            document.getElementById('productModal').classList.remove('active');
-            document.getElementById('editForm').classList.remove('active');
-            document.body.style.overflow = 'auto';
-            cancelNewReview();
-        }
-
-        // ── Admin ────────────────────────────────────────────────────────────
-
-        function toggleAdminPanel() {
-            document.getElementById('adminPanel').classList.toggle('active');
-        }
-
-        function adminLogin() {
-            if (document.getElementById('adminPassword').value === ADMIN_PASSWORD) {
-                isAdmin = true;
-                document.getElementById('adminBadge').classList.add('active');
-                document.getElementById('adminPanel').classList.remove('active');
-                document.getElementById('adminPassword').value = '';
-                displayProducts();
-            } else {
-                alert('Falsches Passwort!');
-            }
-        }
-
-        function deleteProduct(id, e) {
-            e.stopPropagation();
-            if (!isAdmin) return;
-            if (confirm('Produkt wirklich löschen?')) {
-                saveProducts(getProducts().filter(p => p.id !== id));
-                displayProducts();
-            }
-        }
-
-        function editProduct(id, e) {
-            e.stopPropagation();
-            if (!isAdmin) return;
-            const product = getProducts().find(p => p.id === id);
-            if (!product) return;
-            currentProduct = product;
-            showProductDetail(product);
-            document.getElementById('editForm').classList.add('active');
-            document.getElementById('editProductName').value = product.name;
-            document.getElementById('editProductBrand').value = product.brand || '';
-            document.getElementById('editProductPrice').value = product.price;
-            document.getElementById('editProductCategory').value = product.category || '';
-            document.getElementById('editProductInfo').value = product.info;
-        }
-
-        function cancelEdit() { document.getElementById('editForm').classList.remove('active'); }
-
-        function saveEdit() {
-            const name = document.getElementById('editProductName').value.trim();
-            const price = document.getElementById('editProductPrice').value;
-            if (!name || !price) { alert('Name und Preis sind Pflichtfelder!'); return; }
-
-            const products = getProducts();
-            const idx = products.findIndex(p => p.id === currentProduct.id);
-            if (idx !== -1) {
-                products[idx].name = name;
-                products[idx].brand = document.getElementById('editProductBrand').value.trim();
-                products[idx].price = parseFloat(price);
-                products[idx].category = document.getElementById('editProductCategory').value.trim();
-                products[idx].info = document.getElementById('editProductInfo').value.trim();
-                saveProducts(products);
-                displayProducts();
-                showProductDetail(products[idx]);
-                document.getElementById('editForm').classList.remove('active');
-            }
-        }
-
-        function deleteReview(reviewId) {
-            if (!isAdmin) return;
-            if (!confirm('Bewertung löschen?')) return;
-
-            const products = getProducts();
-            const idx = products.findIndex(p => p.id === currentProduct.id);
-            if (idx !== -1) {
-                products[idx].reviews = products[idx].reviews.filter(r => r.id !== reviewId);
-                if (products[idx].reviews.length === 0) {
-                    if (confirm('Letzte Bewertung gelöscht. Auch Produkt löschen?')) {
-                        products.splice(idx, 1);
-                        saveProducts(products);
-                        displayProducts();
-                        closeModal();
-                        return;
-                    }
-                }
-                saveProducts(products);
-                displayProducts();
-                showProductDetail(products[idx]);
-            }
-        }
-    </script>
+        saveProducts(products);displayProducts();showProductDetail(products[idx]);showToast('Bewertung gelöscht');
+    }
+}
+
+/* HELPERS */
+function calcAvg(reviews){if(!reviews.length)return 0;return Math.round(reviews.reduce((s,r)=>s+r.rating,0)/reviews.length);}
+function trunc(t,n){return t&&t.length>n?t.substring(0,n)+'...':(t||'');}
+function fmtDate(s){return new Date(s).toLocaleDateString('de-DE',{year:'numeric',month:'short',day:'numeric'});}
+function closeModal(){document.getElementById('productModal').classList.remove('active');document.getElementById('editForm').classList.remove('active');document.body.style.overflow='auto';}
+function showUploadSection(){document.getElementById('uploadSection').style.display='block';window.scrollTo({top:0,behavior:'smooth'});}
+function cancelUpload(){resetForm();}
+function cancelScan(){
+    isScanning=false;document.getElementById('scannerContainer').style.display='none';
+    document.getElementById('uploadSection').style.display='none';
+    document.getElementById('barcodeResult').innerHTML='';document.getElementById('lookupStatus').style.display='none';
+    currentBarcode=null;currentBarcodeImage=null;currentApiData=null;
+}
+function resetForm(){
+    ['uploadSection','productForm','scannerContainer'].forEach(id=>document.getElementById(id).style.display='none');
+    ['productName','productBrand','productPrice','productCategory','productInfo','reviewText'].forEach(id=>{const el=document.getElementById(id);el.value='';el.classList.remove('auto-filled');});
+    document.getElementById('fileInput').value='';
+    document.getElementById('ratingSlider').value=75;document.getElementById('ratingValue').textContent='75%';
+    document.getElementById('barcodeResult').innerHTML='';document.getElementById('lookupStatus').style.display='none';
+    document.getElementById('productFoundBanner').style.display='none';
+    ['step-scan','step-lookup','step-fill'].forEach(id=>{const el=document.getElementById(id);if(el){el.className='lookup-step';el.querySelector('.step-icon').textContent='⬜';}});
+    currentBarcode=null;currentBarcodeImage=null;currentApiData=null;isScanning=false;
+}
+let toastTimer;
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2800);}
+</script>
 </body>
 </html>
