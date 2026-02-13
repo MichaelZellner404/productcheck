@@ -1145,52 +1145,66 @@
 
         // ── Show Form with auto-filled data ────────────────────────────────
 
-        function showForm(product) {
+        // Lädt eine externe Bild-URL und konvertiert sie sicher zu base64 über einen Proxy
+        async function fetchImageAsBase64(url) {
+            // Open Food Facts erlaubt CORS – wir laden per fetch und konvertieren zu blob->base64
+            try {
+                const resp = await fetch(url);
+                if (!resp.ok) return null;
+                const blob = await resp.blob();
+                return await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = () => resolve(reader.result);
+                    reader.onerror = () => reject(null);
+                    reader.readAsDataURL(blob);
+                });
+            } catch {
+                return null;
+            }
+        }
+
+        async function showForm(product) {
             document.getElementById('detectedBarcode').textContent = currentBarcode;
+            // Zeige erstmal das Barcode-Scan-Bild als Platzhalter
             document.getElementById('barcodePreview').src = currentBarcodeImage;
 
             if (product) {
-                // Auto-fill from API
                 const name = product.product_name_de || product.product_name || product.product_name_en || '';
                 const brand = product.brands || '';
-                const category = product.categories_tags ? 
+                const category = product.categories_tags ?
                     product.categories_tags[0]?.replace('en:', '').replace(/-/g, ' ') : '';
 
-                // Build description
                 let descParts = [];
                 if (product.quantity) descParts.push(`Menge: ${product.quantity}`);
                 if (product.ingredients_text_de || product.ingredients_text) {
                     const ing = product.ingredients_text_de || product.ingredients_text;
                     descParts.push(`Zutaten: ${ing.substring(0, 300)}${ing.length > 300 ? '...' : ''}`);
                 }
-                if (product.nutriscore_grade) {
-                    descParts.push(`Nutri-Score: ${product.nutriscore_grade.toUpperCase()}`);
-                }
+                if (product.nutriscore_grade) descParts.push(`Nutri-Score: ${product.nutriscore_grade.toUpperCase()}`);
                 if (product.packaging) descParts.push(`Verpackung: ${product.packaging}`);
                 if (product.countries) descParts.push(`Herkunft: ${product.countries}`);
 
-                const desc = descParts.join('\n\n');
-
-                // Fill in fields
                 setAutoField('productName', name);
                 setAutoField('productBrand', brand);
                 setAutoField('productCategory', category);
-                setAutoField('productInfo', desc);
+                setAutoField('productInfo', descParts.join('\n\n'));
 
-                // Show product image if available
-                if (product.image_front_url || product.image_url) {
-                    document.getElementById('barcodePreview').src = product.image_front_url || product.image_url;
+                // Produktbild von API laden – als base64 konvertieren damit es sicher gespeichert werden kann
+                const apiImageUrl = product.image_front_small_url || product.image_front_url || product.image_url;
+                if (apiImageUrl) {
+                    const b64 = await fetchImageAsBase64(apiImageUrl);
+                    if (b64) {
+                        currentBarcodeImage = b64; // überschreibt Barcode-Scan mit echtem Produktbild
+                        document.getElementById('barcodePreview').src = b64;
+                    }
+                    // Falls fetch fehlschlägt → bleibt beim Barcode-Bild
                 }
 
-                // Show banner
                 document.getElementById('productFoundBanner').style.display = 'block';
                 document.getElementById('productFoundText').textContent =
-                    `Gefunden: "${name}" von ${brand || 'unbekannte Marke'}. Felder wurden automatisch ausgefüllt.`;
-
-                // Source badge
+                    `Gefunden: "${name}"${brand ? ' von ' + brand : ''}. Felder wurden automatisch ausgefüllt.`;
                 document.getElementById('barcodeSourceBadge').innerHTML =
                     '<span style="font-size:0.72em; font-family: Space Mono, monospace; color: var(--green);">◈ OPEN FOOD FACTS</span>';
-
             } else {
                 document.getElementById('productFoundBanner').style.display = 'none';
                 document.getElementById('barcodeSourceBadge').innerHTML =
@@ -1235,11 +1249,8 @@
 
             const products = getProducts();
 
-            // Determine display image: prefer API product image over barcode scan
-            let displayImage = currentBarcodeImage;
-            if (currentApiData) {
-                displayImage = currentApiData.image_front_url || currentApiData.image_url || currentBarcodeImage;
-            }
+            // currentBarcodeImage wurde in showForm() ggf. bereits durch das API-Bild (base64) ersetzt
+            const displayImage = currentBarcodeImage;
 
             const newProduct = {
                 id: Date.now().toString(),
@@ -1301,7 +1312,8 @@
                         ${product.fromApi ? '<div class="api-badge">◈ API</div>' : ''}
                         <div class="product-barcode-badge">${product.barcode}</div>
                         <div class="product-image${product.fromApi ? ' has-product-img' : ''}">
-                            <img src="${product.barcodeImage}" alt="${product.name}" onerror="this.style.opacity='0.3'">
+                            <img src="${product.barcodeImage}" alt="${product.name}"
+                                 onerror="this.outerHTML='<div style=\'font-size:3em;opacity:0.2;\'>📦</div>'">
                         </div>
                         <div class="product-content">
                             <div class="product-name">${product.name}</div>
@@ -1335,7 +1347,11 @@
             document.getElementById('modalTitle').textContent = product.name;
             document.getElementById('modalBrand').textContent = product.brand ? `Von ${product.brand}` : '';
             document.getElementById('modalBarcode').textContent = product.barcode;
-            document.getElementById('modalBarcodeImage').src = product.barcodeImage;
+            document.getElementById('modalBarcodeImage').src = product.barcodeImage || '';
+            document.getElementById('modalBarcodeImage').onerror = function() {
+                this.style.display = 'none';
+                this.parentElement.innerHTML += '<div style="font-size:4em;opacity:0.15;">📦</div>';
+            };
             document.getElementById('modalPrice').textContent = product.price.toFixed(2) + ' €';
             document.getElementById('modalRating').textContent = avg + '%';
             document.getElementById('modalReviewCount').textContent = product.reviews.length;
